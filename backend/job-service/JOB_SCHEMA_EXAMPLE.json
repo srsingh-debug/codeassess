@@ -1,0 +1,374 @@
+{
+  "jobSchemaExample": {
+    "description": "Complete example of a Job document with all fields populated. This represents a job posting from creation to candidate view.",
+    "example": {
+      "_id": "65a1b2c3d4e5f6g7h8i9j0k1",
+      "title": "Senior Full Stack Developer",
+      "description": "We are looking for an experienced Senior Full Stack Developer to join our dynamic engineering team. You will be responsible for designing, developing, and maintaining scalable web applications using modern technologies.\n\nKey Responsibilities:\n- Design and develop robust, scalable web applications\n- Collaborate with cross-functional teams to define and implement new features\n- Write clean, maintainable, and well-documented code\n- Participate in code reviews and mentor junior developers\n- Optimize application performance and ensure high-quality user experience\n- Stay up-to-date with emerging technologies and industry best practices\n\nWhat We Offer:\n- Competitive salary and comprehensive benefits package\n- Flexible work arrangements (remote/hybrid options)\n- Professional development opportunities\n- Collaborative and inclusive work environment\n- Opportunity to work on cutting-edge projects",
+      "shortDescription": "Join our engineering team as a Senior Full Stack Developer. Build scalable web applications with modern technologies. Remote/hybrid options available.",
+      "location": "San Francisco, CA",
+      "workLocationType": "hybrid",
+      "employmentType": "full-time",
+      "requirements": {
+        "minExperience": 5,
+        "maxExperience": 10,
+        "education": [
+          "Bachelor's Degree in Computer Science or related field",
+          "Master's Degree preferred"
+        ],
+        "certifications": [
+          "AWS Certified Developer",
+          "Google Cloud Professional"
+        ],
+        "skills": [
+          "JavaScript",
+          "TypeScript",
+          "React",
+          "Node.js",
+          "PostgreSQL",
+          "MongoDB",
+          "Docker",
+          "Kubernetes",
+          "AWS",
+          "GraphQL",
+          "REST APIs",
+          "Microservices Architecture"
+        ],
+        "languages": [
+          "English (Fluent)"
+        ],
+        "visaSponsorship": true
+      },
+      "compensation": {
+        "min": 120000,
+        "max": 180000,
+        "currency": "USD",
+        "period": "yearly",
+        "equity": "0.1% - 0.5%",
+        "benefits": [
+          "Health Insurance",
+          "Dental Insurance",
+          "Vision Insurance",
+          "401(k) with company match",
+          "Unlimited PTO",
+          "Flexible work hours",
+          "Remote work options",
+          "Professional development budget",
+          "Gym membership",
+          "Free meals and snacks"
+        ]
+      },
+      "applicationSettings": {
+        "requireCoverLetter": true,
+        "requirePortfolio": true,
+        "requireReferences": false,
+        "maxApplications": 100,
+        "autoRejectThreshold": 60,
+        "assessmentRequired": true,
+        "assessmentId": "65a1b2c3d4e5f6g7h8i9j0k2"
+      },
+      "applicationDeadline": "2025-03-31T23:59:59.000Z",
+      "status": "published",
+      "priority": "high",
+      "approvalStatus": {
+        "status": "approved",
+        "approvedBy": "65a1b2c3d4e5f6g7h8i9j0k3",
+        "approvedAt": "2025-01-15T10:30:00.000Z",
+        "comments": "Approved. Great job description and competitive compensation package."
+      },
+      "createdBy": "65a1b2c3d4e5f6g7h8i9j0k4",
+      "createdByRole": "recruiter",
+      "approvedBy": "65a1b2c3d4e5f6g7h8i9j0k3",
+      "publishedBy": "65a1b2c3d4e5f6g7h8i9j0k4",
+      "publishedAt": "2025-01-15T14:00:00.000Z",
+      "publicLink": "senior-full-stack-developer-a1b2c3",
+      "isActive": true,
+      "viewsCount": 245,
+      "applicationsCount": 18,
+      "department": "Engineering",
+      "team": "Product Engineering",
+      "reportingTo": "Engineering Manager - Product Team",
+      "tags": [
+        "full-stack",
+        "senior",
+        "react",
+        "nodejs",
+        "remote-friendly",
+        "high-priority"
+      ],
+      "companyInfo": {
+        "name": "TechCorp Inc.",
+        "website": "https://techcorp.com",
+        "logo": "https://techcorp.com/logo.png"
+      },
+      "internalNotes": "This is a critical role for Q2 2025. Priority hiring. Budget approved by CFO.",
+      "createdAt": "2025-01-10T09:00:00.000Z",
+      "updatedAt": "2025-01-20T11:15:00.000Z"
+    }
+  },
+  "jobStatusFlow": {
+    "description": "Job status transitions throughout the lifecycle",
+    "flow": [
+      {
+        "status": "draft",
+        "description": "Job is being created by Recruiter or Hiring Manager",
+        "canTransitionTo": ["pending_approval", "cancelled"],
+        "visibleToCandidates": false
+      },
+      {
+        "status": "pending_approval",
+        "description": "Job submitted for Hiring Manager approval",
+        "canTransitionTo": ["approved", "draft", "cancelled"],
+        "visibleToCandidates": false
+      },
+      {
+        "status": "approved",
+        "description": "Hiring Manager approved, ready to publish",
+        "canTransitionTo": ["published", "draft", "cancelled"],
+        "visibleToCandidates": false
+      },
+      {
+        "status": "published",
+        "description": "Job is live on job board, accepting applications",
+        "canTransitionTo": ["closed", "filled", "cancelled"],
+        "visibleToCandidates": true
+      },
+      {
+        "status": "closed",
+        "description": "No longer accepting applications (deadline passed or manually closed)",
+        "canTransitionTo": ["published", "filled", "cancelled"],
+        "visibleToCandidates": true
+      },
+      {
+        "status": "filled",
+        "description": "Position has been filled, candidate hired",
+        "canTransitionTo": [],
+        "visibleToCandidates": true
+      },
+      {
+        "status": "cancelled",
+        "description": "Job posting cancelled (budget cut, role no longer needed, etc.)",
+        "canTransitionTo": [],
+        "visibleToCandidates": false
+      }
+    ]
+  },
+  "roleBasedViews": {
+    "description": "What each role sees when viewing a job",
+    "hiringManager": {
+      "canSee": [
+        "All fields including internal notes",
+        "Approval status and history",
+        "Application statistics",
+        "View counts",
+        "All metadata"
+      ],
+      "canEdit": [
+        "All fields when status is 'draft' or 'pending_approval'",
+        "Approval/rejection decision",
+        "Internal notes"
+      ],
+      "canDo": [
+        "Create job",
+        "Approve/reject job",
+        "View all applications",
+        "Close job",
+        "Mark as filled"
+      ]
+    },
+    "recruiter": {
+      "canSee": [
+        "All fields except internal notes",
+        "Application statistics",
+        "View counts",
+        "Approval status"
+      ],
+      "canEdit": [
+        "All fields when status is 'draft'",
+        "Publish job (if approved)",
+        "Application settings"
+      ],
+      "canDo": [
+        "Create job",
+        "Submit for approval",
+        "Publish job",
+        "Manage applications",
+        "Update job details"
+      ]
+    },
+    "candidate": {
+      "canSee": [
+        "title",
+        "description",
+        "shortDescription",
+        "location",
+        "workLocationType",
+        "employmentType",
+        "requirements",
+        "compensation (if visible)",
+        "applicationDeadline",
+        "companyInfo",
+        "tags",
+        "createdAt",
+        "publicLink"
+      ],
+      "cannotSee": [
+        "internalNotes",
+        "approvalStatus",
+        "createdBy",
+        "viewsCount",
+        "applicationsCount",
+        "priority",
+        "applicationSettings (some fields)"
+      ],
+      "canDo": [
+        "View job details",
+        "Apply for job",
+        "Save job for later"
+      ]
+    }
+  },
+  "validationRules": {
+    "description": "Validation rules for job creation and updates",
+    "requiredFields": [
+      "title",
+      "description",
+      "location",
+      "workLocationType",
+      "employmentType",
+      "requirements.skills",
+      "createdBy",
+      "createdByRole"
+    ],
+    "fieldValidations": {
+      "title": {
+        "minLength": 5,
+        "maxLength": 200,
+        "required": true
+      },
+      "description": {
+        "minLength": 100,
+        "required": true
+      },
+      "shortDescription": {
+        "maxLength": 500
+      },
+      "applicationDeadline": {
+        "mustBeFuture": true
+      },
+      "compensation": {
+        "ifProvided": {
+          "min": "must be less than max",
+          "currency": "required",
+          "period": "required"
+        }
+      },
+      "requirements.skills": {
+        "minItems": 1,
+        "required": true
+      }
+    },
+    "statusTransitions": {
+      "draft -> pending_approval": {
+        "required": ["All required fields filled", "Valid application deadline"],
+        "allowedRoles": ["recruiter", "hiring-manager"]
+      },
+      "pending_approval -> approved": {
+        "required": ["Hiring manager approval"],
+        "allowedRoles": ["hiring-manager"]
+      },
+      "approved -> published": {
+        "required": ["All required fields", "Approval status = approved"],
+        "allowedRoles": ["recruiter", "admin"]
+      },
+      "published -> closed": {
+        "required": [],
+        "allowedRoles": ["recruiter", "admin", "hiring-manager"]
+      },
+      "published -> filled": {
+        "required": ["Candidate hired"],
+        "allowedRoles": ["hiring-manager", "hr"]
+      }
+    }
+  },
+  "apiEndpoints": {
+    "description": "Suggested API endpoints for job management",
+    "endpoints": [
+      {
+        "method": "POST",
+        "path": "/api/jobs",
+        "description": "Create a new job (draft)",
+        "allowedRoles": ["recruiter", "hiring-manager"],
+        "body": "Job object (status will be set to 'draft')"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/jobs/:id",
+        "description": "Update job details",
+        "allowedRoles": ["recruiter", "hiring-manager"],
+        "body": "Partial job object"
+      },
+      {
+        "method": "POST",
+        "path": "/api/jobs/:id/submit",
+        "description": "Submit job for approval",
+        "allowedRoles": ["recruiter", "hiring-manager"],
+        "changes": "status -> 'pending_approval'"
+      },
+      {
+        "method": "POST",
+        "path": "/api/jobs/:id/approve",
+        "description": "Approve job (hiring manager)",
+        "allowedRoles": ["hiring-manager"],
+        "changes": "status -> 'approved', approvalStatus updated"
+      },
+      {
+        "method": "POST",
+        "path": "/api/jobs/:id/reject",
+        "description": "Reject job (hiring manager)",
+        "allowedRoles": ["hiring-manager"],
+        "body": "{ rejectionReason: string }",
+        "changes": "status -> 'draft', approvalStatus updated"
+      },
+      {
+        "method": "POST",
+        "path": "/api/jobs/:id/publish",
+        "description": "Publish job to job board",
+        "allowedRoles": ["recruiter", "admin"],
+        "changes": "status -> 'published', isActive -> true"
+      },
+      {
+        "method": "POST",
+        "path": "/api/jobs/:id/close",
+        "description": "Close job (stop accepting applications)",
+        "allowedRoles": ["recruiter", "admin", "hiring-manager"],
+        "changes": "status -> 'closed', isActive -> false"
+      },
+      {
+        "method": "GET",
+        "path": "/api/jobs",
+        "description": "Get jobs (filtered by role)",
+        "queryParams": "status, createdBy, department, tags, etc."
+      },
+      {
+        "method": "GET",
+        "path": "/api/jobs/public",
+        "description": "Get published jobs for job board (public endpoint)",
+        "queryParams": "location, workLocationType, employmentType, skills, etc."
+      },
+      {
+        "method": "GET",
+        "path": "/api/jobs/:id",
+        "description": "Get job details (role-based view)",
+        "public": "If published, candidates can view"
+      },
+      {
+        "method": "GET",
+        "path": "/api/jobs/:id/stats",
+        "description": "Get job statistics (views, applications)",
+        "allowedRoles": ["recruiter", "hiring-manager", "admin"]
+      }
+    ]
+  }
+}
+

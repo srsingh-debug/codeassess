@@ -1,0 +1,158 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: codeassess-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - codeassess-network
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: codeassess-auth-service
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      NODE_ENV: production
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/codeassess_auth?authSource=admin
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      JWT_EXPIRES_IN: 7d
+      REFRESH_TOKEN_SECRET: ${REFRESH_TOKEN_SECRET:-your-refresh-token-secret}
+      REFRESH_TOKEN_EXPIRES_IN: 30d
+    depends_on:
+      - mongodb
+    networks:
+      - codeassess-network
+
+  # Job Service
+  job-service:
+    build:
+      context: ./job-service
+      dockerfile: Dockerfile
+    container_name: codeassess-job-service
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: 3002
+      NODE_ENV: production
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/codeassess_jobs?authSource=admin
+      AUTH_SERVICE_URL: http://auth-service:3001
+    depends_on:
+      - mongodb
+      - auth-service
+    networks:
+      - codeassess-network
+
+  # Candidate Service
+  candidate-service:
+    build:
+      context: ./candidate-service
+      dockerfile: Dockerfile
+    container_name: codeassess-candidate-service
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    environment:
+      PORT: 3003
+      NODE_ENV: production
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/codeassess_candidates?authSource=admin
+      AUTH_SERVICE_URL: http://auth-service:3001
+    depends_on:
+      - mongodb
+      - auth-service
+    networks:
+      - codeassess-network
+
+  # Application Service
+  application-service:
+    build:
+      context: ./application-service
+      dockerfile: Dockerfile
+    container_name: codeassess-application-service
+    restart: unless-stopped
+    ports:
+      - "3004:3004"
+    environment:
+      PORT: 3004
+      NODE_ENV: production
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/codeassess_applications?authSource=admin
+      AUTH_SERVICE_URL: http://auth-service:3001
+      JOB_SERVICE_URL: http://job-service:3002
+      CANDIDATE_SERVICE_URL: http://candidate-service:3003
+    depends_on:
+      - mongodb
+      - auth-service
+    networks:
+      - codeassess-network
+
+  # Assessment Service
+  assessment-service:
+    build:
+      context: ./assessment-service
+      dockerfile: Dockerfile
+    container_name: codeassess-assessment-service
+    restart: unless-stopped
+    ports:
+      - "3005:3005"
+    environment:
+      PORT: 3005
+      NODE_ENV: production
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/codeassess_assessments?authSource=admin
+      AUTH_SERVICE_URL: http://auth-service:3001
+    depends_on:
+      - mongodb
+      - auth-service
+    networks:
+      - codeassess-network
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: codeassess-api-gateway
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      AUTH_SERVICE_URL: http://auth-service:3001
+      JOB_SERVICE_URL: http://job-service:3002
+      CANDIDATE_SERVICE_URL: http://candidate-service:3003
+      APPLICATION_SERVICE_URL: http://application-service:3004
+      ASSESSMENT_SERVICE_URL: http://assessment-service:3005
+      RATE_LIMIT_WINDOW_MS: 900000
+      RATE_LIMIT_MAX_REQUESTS: 100
+    depends_on:
+      - auth-service
+      - job-service
+      - candidate-service
+      - application-service
+      - assessment-service
+    networks:
+      - codeassess-network
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  codeassess-network:
+    driver: bridge
+

@@ -1,0 +1,301 @@
+
+╔══════════════════════════════════════════════════════════════════════════════════════╗
+║                     CODEASSESS MICROSERVICES ARCHITECTURE                            ║
+╚══════════════════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                              CLIENT LAYER                                            │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐           │
+│  │   Web App    │  │  Mobile App  │  │   Admin UI   │  │  Public Site │           │
+│  │  (React)     │  │  (Native)    │  │  (React)     │  │  (Next.js)   │           │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘           │
+│         │                 │                 │                 │                     │
+│         └─────────────────┴─────────────────┴─────────────────┘                     │
+│                                    │                                                 │
+│                         HTTP/HTTPS │ (REST API)                                      │
+└────────────────────────────────────┼─────────────────────────────────────────────────┘
+                                     │
+                                     ▼
+┌═════════════════════════════════════════════════════════════════════════════════════┐
+║                           API GATEWAY (Port 3000)                                    ║
+║  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐  ┌─────────────────┐  ║
+║  │ Rate Limiting  │  │ Load Balancing │  │  Routing       │  │ Health Check    │  ║
+║  │ (100 req/15m)  │  │ (Round Robin)  │  │  (Path-based)  │  │ (All Services)  │  ║
+║  └────────────────┘  └────────────────┘  └────────────────┘  └─────────────────┘  ║
+║                                                                                      ║
+║  Technologies: Express.js, http-proxy-middleware, helmet, cors                      ║
+╚═════════════════════════════════════════════════════════════════════════════════════╝
+                                     │
+          ┌──────────────────────────┼──────────────────────────┐
+          │                          │                           │
+          ▼                          ▼                           ▼
+┌──────────────────────┐  ┌──────────────────────┐  ┌──────────────────────┐
+│   AUTH SERVICE       │  │   JOB SERVICE        │  │   CANDIDATE SERVICE  │
+│   Port: 3001         │  │   Port: 3002         │  │   Port: 3003         │
+├──────────────────────┤  ├──────────────────────┤  ├──────────────────────┤
+│ ✓ User Registration  │  │ ✓ Job Creation       │  │ ✓ Profile Mgmt      │
+│ ✓ Login/Logout       │  │ ✓ Job Listing        │  │ ✓ Skills Tracking   │
+│ ✓ JWT Generation     │  │ ✓ Job Search         │  │ ✓ Resume Upload     │
+│ ✓ Token Verification │  │ ✓ Public Links       │  │ ✓ Candidate Search  │
+│ ✓ Refresh Tokens     │  │ ✓ Job Statistics     │  │ ✓ Profile Stats     │
+│ ✓ Password Hashing   │  │ ✓ Status Management  │  │ ✓ Education History │
+├──────────────────────┤  ├──────────────────────┤  ├──────────────────────┤
+│  Database:           │  │  Database:           │  │  Database:           │
+│  codeassess_auth     │  │  codeassess_jobs     │  │  codeassess_candidates│
+└──────────┬───────────┘  └──────────┬───────────┘  └──────────┬───────────┘
+           │                         │                          │
+           │    ┌────────────────────┼──────────────────────────┘
+           │    │                    │
+           ▼    ▼                    ▼
+┌──────────────────────┐  ┌──────────────────────┐
+│  APPLICATION SERVICE │  │  ASSESSMENT SERVICE  │
+│  Port: 3004          │  │  Port: 3005          │
+├──────────────────────┤  ├──────────────────────┤
+│ ✓ Apply for Jobs    │  │ ✓ Create Assessments│
+│ ✓ Track Applications│  │ ✓ Manage Questions  │
+│ ✓ Pre-screening Q&A │  │ ✓ Take Assessment   │
+│ ✓ Status Updates    │  │ ✓ Auto-scoring      │
+│ ✓ Admin Reviews     │  │ ✓ Time Tracking     │
+│ ✓ Application Stats │  │ ✓ Result Analysis   │
+├──────────────────────┤  ├──────────────────────┤
+│  Database:           │  │  Database:           │
+│  codeassess_         │  │  codeassess_         │
+│  applications        │  │  assessments         │
+└──────────┬───────────┘  └──────────┬───────────┘
+           │                         │
+           └─────────────┬───────────┘
+                         │
+                         ▼
+┌═════════════════════════════════════════════════════════════════════════════════════┐
+║                              DATABASE LAYER                                          ║
+║  ┌─────────────────────────────────────────────────────────────────────────────┐   ║
+║  │                           MongoDB 7.0                                        │   ║
+║  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐      │   ║
+║  │  │ Users & Tokens│ │    Jobs     │ │  Candidates  │ │ Applications │      │   ║
+║  │  └──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘      │   ║
+║  │  ┌──────────────┐                                                           │   ║
+║  │  │ Assessments  │                                                           │   ║
+║  │  │ & Attempts   │                                                           │   ║
+║  │  └──────────────┘                                                           │   ║
+║  └─────────────────────────────────────────────────────────────────────────────┘   ║
+║                                                                                      ║
+║  Features: Separate DBs per service, Indexing, Connection Pooling                   ║
+╚═════════════════════════════════════════════════════════════════════════════════════╝
+
+
+╔══════════════════════════════════════════════════════════════════════════════════════╗
+║                          AUTHENTICATION FLOW                                          ║
+╚══════════════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────┐                ┌─────────────┐              ┌──────────────┐
+│  Client  │                │ API Gateway │              │ Auth Service │
+└────┬─────┘                └──────┬──────┘              └──────┬───────┘
+     │                             │                            │
+     │  1. POST /auth/login        │                            │
+     │ (email, password)            │                            │
+     │────────────────────────────►│                            │
+     │                             │  2. Forward Request        │
+     │                             │───────────────────────────►│
+     │                             │                            │
+     │                             │                            │  3. Verify Credentials
+     │                             │                            │     Hash Password
+     │                             │                            │     Generate JWT
+     │                             │                            │
+     │                             │  4. Return Tokens          │
+     │                             │◄───────────────────────────│
+     │  5. Return to Client        │   (access + refresh)       │
+     │◄────────────────────────────│                            │
+     │                             │                            │
+     │  Store tokens locally       │                            │
+     │                             │                            │
+     │                                                          │
+     │  6. Subsequent Request                                   │
+     │  (Authorization: Bearer TOKEN)                           │
+     │────────────────────────────►│                            │
+     │                             │  7. Verify Token           │
+     │                             │───────────────────────────►│
+     │                             │  8. User Data              │
+     │                             │◄───────────────────────────│
+     │                             │                            │
+     │                             │  9. Process Request        │
+     │                             │  (with user context)       │
+     │                             │                            │
+
+
+╔══════════════════════════════════════════════════════════════════════════════════════╗
+║                          DATA FLOW - JOB APPLICATION                                  ║
+╚══════════════════════════════════════════════════════════════════════════════════════╝
+
+Candidate browses jobs → Views job details → Fills application → Submits
+                                                                     │
+                                                                     ▼
+┌────────────────────────────────────────────────────────────────────────────────────┐
+│ 1. Job Service: Verify job exists and is published                                 │
+│ 2. Candidate Service: Get/Create candidate profile                                 │
+│ 3. Application Service: Create application with answers                            │
+│ 4. Application Service: Store in database                                          │
+└────────────────────────────────────────────────────────────────────────────────────┘
+                                     │
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────────────────┐
+│ Admin Dashboard: View applications                                                  │
+│ Admin: Review application → Update status (shortlist/reject)                       │
+│ Admin: Send assessment link                                                         │
+└────────────────────────────────────────────────────────────────────────────────────┘
+                                     │
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────────────────┐
+│ Assessment Service: Candidate takes assessment                                      │
+│ Assessment Service: Auto-score objective questions                                  │
+│ Assessment Service: Store results                                                   │
+│ Admin: View results and make hiring decision                                        │
+└────────────────────────────────────────────────────────────────────────────────────┘
+
+
+╔══════════════════════════════════════════════════════════════════════════════════════╗
+║                          SCALABILITY ARCHITECTURE                                     ║
+╚══════════════════════════════════════════════════════════════════════════════════════╝
+
+                         ┌────────────────────┐
+                         │   Load Balancer    │
+                         │   (Nginx/HAProxy)  │
+                         └─────────┬──────────┘
+                                   │
+              ┌────────────────────┼────────────────────┐
+              │                    │                    │
+              ▼                    ▼                    ▼
+    ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
+    │  API Gateway    │  │  API Gateway    │  │  API Gateway    │
+    │   Instance 1    │  │   Instance 2    │  │   Instance 3    │
+    └────────┬────────┘  └────────┬────────┘  └────────┬────────┘
+             │                    │                    │
+             └────────────────────┼────────────────────┘
+                                  │
+        ┌─────────────────────────┼─────────────────────────┐
+        │                         │                         │
+        ▼                         ▼                         ▼
+ ┌────────────┐           ┌────────────┐           ┌────────────┐
+ │ Auth Svc   │           │  Job Svc   │           │  Other     │
+ │ [x3 inst]  │           │ [x5 inst]  │           │ Services   │
+ └────┬───────┘           └────┬───────┘           └────┬───────┘
+      │                        │                        │
+      └────────────────────────┼────────────────────────┘
+                               │
+                      ┌────────┴────────┐
+                      │                 │
+              ┌───────▼───────┐  ┌──────▼──────┐
+              │  MongoDB      │  │   Redis     │
+              │  Primary      │  │   Cache     │
+              └───────┬───────┘  └─────────────┘
+                      │
+            ┌─────────┴─────────┐
+            │                   │
+    ┌───────▼───────┐  ┌────────▼──────┐
+    │  MongoDB      │  │   MongoDB     │
+    │  Replica 1    │  │   Replica 2   │
+    └───────────────┘  └───────────────┘
+
+
+╔══════════════════════════════════════════════════════════════════════════════════════╗
+║                          TECHNOLOGY STACK OVERVIEW                                    ║
+╚══════════════════════════════════════════════════════════════════════════════════════╝
+
+┌────────────────────────────────────────────────────────────────────────────────────┐
+│  FRONTEND (Existing)                                                                │
+│  ├── React 18 + TypeScript                                                          │
+│  ├── TailwindCSS                                                                    │
+│  ├── React Router v7                                                                │
+│  └── Lucide Icons                                                                   │
+└────────────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────────────┐
+│  BACKEND (New Microservices)                                                        │
+│  ├── Node.js 20 + TypeScript                                                        │
+│  ├── Express.js (Web framework)                                                     │
+│  ├── MongoDB 7.0 (Database)                                                         │
+│  ├── JWT + bcrypt (Authentication)                                                  │
+│  ├── Joi (Validation)                                                               │
+│  ├── Helmet + CORS (Security)                                                       │
+│  ├── http-proxy-middleware (Gateway)                                                │
+│  └── express-rate-limit (Rate limiting)                                             │
+└────────────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────────────┐
+│  DEVOPS & DEPLOYMENT                                                                │
+│  ├── Docker (Containerization)                                                      │
+│  ├── Docker Compose (Orchestration)                                                 │
+│  ├── Multi-stage Dockerfiles (Optimization)                                         │
+│  └── Health Checks (Monitoring)                                                     │
+└────────────────────────────────────────────────────────────────────────────────────┘
+
+
+╔══════════════════════════════════════════════════════════════════════════════════════╗
+║                          PORT ALLOCATION                                              ║
+╚══════════════════════════════════════════════════════════════════════════════════════╝
+
+Port 3000  →  API Gateway (Main Entry Point)
+Port 3001  →  Auth Service
+Port 3002  →  Job Service
+Port 3003  →  Candidate Service
+Port 3004  →  Application Service
+Port 3005  →  Assessment Service
+Port 27017 →  MongoDB
+
+
+╔══════════════════════════════════════════════════════════════════════════════════════╗
+║                          DEPLOYMENT WORKFLOW                                          ║
+╚══════════════════════════════════════════════════════════════════════════════════════╝
+
+Development:
+┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
+│   Code   │ →  │  Build   │ →  │  Test    │ →  │  Deploy  │
+│  Changes │    │  Docker  │    │  Services│    │  to Dev  │
+└──────────┘    └──────────┘    └──────────┘    └──────────┘
+
+Production:
+┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
+│   Git    │ →  │  CI/CD   │ →  │  Build & │ →  │  Deploy  │ →  │ Monitor  │
+│  Commit  │    │ Pipeline │    │   Test   │    │  to Prod │    │ Services │
+└──────────┘    └──────────┘    └──────────┘    └──────────┘    └──────────┘
+
+
+╔══════════════════════════════════════════════════════════════════════════════════════╗
+║                          QUICK COMMAND REFERENCE                                      ║
+╚══════════════════════════════════════════════════════════════════════════════════════╝
+
+Start All Services:
+  $ docker-compose up -d
+
+View Logs:
+  $ docker-compose logs -f
+  $ docker-compose logs -f auth-service
+
+Stop All Services:
+  $ docker-compose down
+
+Rebuild Services:
+  $ docker-compose build
+  $ docker-compose up -d --build
+
+Check Health:
+  $ curl http://localhost:3000/health
+
+Test API:
+  $ curl -X POST http://localhost:3000/api/auth/register \
+      -H "Content-Type: application/json" \
+      -d '{"email":"test@example.com","password":"test123","name":"Test","role":"admin"}'
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+
+This architecture provides:
+✅ Scalability        - Scale services independently
+✅ Maintainability    - Clean separation of concerns
+✅ Security          - Multiple security layers
+✅ Reliability       - Independent service failures
+✅ Performance       - Optimized for high load
+✅ Flexibility       - Easy to add new services
+✅ Production Ready  - Docker deployment included
+
+═══════════════════════════════════════════════════════════════════════════════════════
+

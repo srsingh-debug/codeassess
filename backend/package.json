@@ -1,0 +1,40 @@
+{
+  "name": "@codeassess/backend",
+  "version": "1.0.0",
+  "description": "CodeAssess Backend Microservices",
+  "private": true,
+  "scripts": {
+    "install:all": "npm run install:shared && npm run install:services && npm run install:gateway",
+    "install:shared": "cd shared && npm install",
+    "install:services": "cd auth-service && npm install && cd ../job-service && npm install && cd ../candidate-service && npm install && cd ../application-service && npm install && cd ../assessment-service && npm install",
+    "install:gateway": "cd api-gateway && npm install",
+    "dev:auth": "cd auth-service && npm run dev",
+    "dev:job": "cd job-service && npm run dev",
+    "dev:candidate": "cd candidate-service && npm run dev",
+    "dev:application": "cd application-service && npm run dev",
+    "dev:assessment": "cd assessment-service && npm run dev",
+    "dev:gateway": "cd api-gateway && npm run dev",
+    "build:all": "npm run build:shared && npm run build:services && npm run build:gateway",
+    "build:shared": "cd shared && npm run build",
+    "build:services": "cd auth-service && npm run build && cd ../job-service && npm run build && cd ../candidate-service && npm run build && cd ../application-service && npm run build && cd ../assessment-service && npm run build",
+    "build:gateway": "cd api-gateway && npm run build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:build": "docker-compose build",
+    "docker:restart": "docker-compose restart"
+  },
+  "keywords": [
+    "microservices",
+    "nodejs",
+    "typescript",
+    "express",
+    "mongodb",
+    "api-gateway",
+    "jwt",
+    "authentication"
+  ],
+  "author": "CodeAssess Team",
+  "license": "MIT"
+}
+
