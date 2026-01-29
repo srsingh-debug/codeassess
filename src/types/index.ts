@@ -116,6 +116,9 @@ export interface JobPost {
   title: string;
   description: string;
   location: string;
+  education: string;
+  jobType: string;
+  compensation: string;
   requiredSkills: string[];
   experience: string;
   applicationDeadline: Date;
