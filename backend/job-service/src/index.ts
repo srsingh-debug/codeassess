@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import jobRoutes from './routes/jobRoutes';
 import { connectDatabase } from './config/database';
+import applicationRoutes from './routes/applicationRoutes';
 
 dotenv.config();
 
@@ -18,6 +19,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/jobs', jobRoutes);
+//apply job routes
+//apply for job jobID, user DATA, save in new table/collection,
+app.use('/api/applications', applicationRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -27,20 +31,20 @@ app.get('/health', (req, res) => {
 // Error handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Error:', err);
-  res.status(err.statusCode || 500).json({
-    success: false,
-    error: {
+    res.status(err.statusCode || 500).json({
+      success: false,
+      error: {
       message: err.message || 'Internal server error',
       code: err.code || 'INTERNAL_ERROR',
-    },
-  });
+      },
+    });
 });
 
 // Start server
 const startServer = async () => {
   try {
     await connectDatabase();
-    
+
     app.listen(PORT, () => {
       console.log(`🚀 Job Service running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -52,4 +56,3 @@ const startServer = async () => {
 };
 
 startServer();
-

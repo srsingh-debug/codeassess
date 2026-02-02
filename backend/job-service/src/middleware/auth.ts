@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'http://localhost:3001';
 
-export interface AuthRequest extends Request {
+export interface  AuthRequest extends Request {
   user?: {
     userId: string;
     email: string;
