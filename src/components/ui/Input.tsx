@@ -2,6 +2,7 @@ import React from 'react';
 import { LucideIcon } from 'lucide-react';
 
 interface InputProps {
+  name?: string;  
   label?: string;
   placeholder?: string;
   type?: string;
@@ -15,6 +16,7 @@ interface InputProps {
 }
 
 export const Input: React.FC<InputProps> = ({
+  name,
   label,
   placeholder,
   type = 'text',
@@ -38,6 +40,7 @@ export const Input: React.FC<InputProps> = ({
           <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
         )}
         <input
+          name={name}
           type={type}
           value={value}
           onChange={onChange}

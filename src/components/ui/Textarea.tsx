@@ -1,6 +1,7 @@
 import React from 'react';
 
 interface TextareaProps {
+  name?: string;
   label?: string;
   placeholder?: string;
   value?: string;
@@ -12,6 +13,7 @@ interface TextareaProps {
 }
 
 export const Textarea: React.FC<TextareaProps> = ({
+  name,
   label,
   placeholder,
   value,
@@ -29,6 +31,7 @@ export const Textarea: React.FC<TextareaProps> = ({
         </label>
       )}
       <textarea
+        name={name}
         value={value}
         onChange={onChange}
         placeholder={placeholder}

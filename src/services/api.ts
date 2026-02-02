@@ -3,15 +3,13 @@ import axios, { AxiosInstance, AxiosError } from "axios";
 const API_BASE_URL =
   import.meta.env.VITE_AUTH_URL || "http://localhost:3000/api-gateway";
 
-
-
 // Create axios instance
 export const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
-});                      
+});
 
 // // Request interceptor to add auth token
 // api.interceptors.request.use(
@@ -103,16 +101,13 @@ const responseErrorInterceptor = (error: AxiosError) => {
 // Attach interceptors to both instances
 [api].forEach((instance) => {
   instance.interceptors.request.use(requestInterceptor, (error) =>
-    Promise.reject(error)
+    Promise.reject(error),
   );
   instance.interceptors.response.use(
     responseInterceptor,
-    responseErrorInterceptor
+    responseErrorInterceptor,
   );
 });
-
- 
-
 
 // Auth API
 export const authApi = {
@@ -180,6 +175,16 @@ export const getRefreshToken = (): string | null => {
   return localStorage.getItem("refreshToken");
 };
 
+// Application Status Enum
+export enum ApplicationStatus {
+  APPLIED = "applied",
+  SHORTLISTED = "shortlisted",
+  INTERVIEW = "interview",
+  OFFERED = "offered",
+  REJECTED = "rejected",
+  WITHDRAWN = "withdrawn",
+}
+
 // Job API
 export interface JobCreateData {
   title: string;
@@ -231,6 +236,23 @@ export interface JobCreateData {
     website?: string;
     logo?: string;
   };
+}
+
+//application api from job-service
+
+export interface ApplicationCreateData {
+  jobId: string;
+  candidateId?: string;
+  candidateName: string;
+  candidateEmail: string;
+  candidatePhone?: string;
+  linkedinUrl?: string;
+  githubUrl?: string;
+  resumeUrl: string;
+  roleInterest: string;
+  expectedSalaryRange: string;
+  preScreeningAnswers?: Record<string, string>;
+  status?: ApplicationStatus;
 }
 
 // export const jobService ={
@@ -328,3 +350,18 @@ export const jobApi = {
     return response.data;
   },
 };
+
+//to apply we need the job id to which our application data is being sent to
+export const applicationApi = {
+  apply: async (jobId: string, data: ApplicationCreateData) => {
+    const response = await api.post(`/job/api/applications/apply`, data);
+    return response.data;
+  },
+};
+
+// export const applicationApi = {
+//   apply: async (jobId: string, data: ApplicationCreateData) => {
+//     const response = await api.post(`/job/api/applications/apply/${jobId}`, data);
+//     return response.data;
+//   },
+// };

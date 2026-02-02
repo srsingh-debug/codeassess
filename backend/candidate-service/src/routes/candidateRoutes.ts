@@ -9,6 +9,7 @@ router.get('/profile', authenticate, CandidateController.getOrCreateProfile);
 router.put('/profile', authenticate, CandidateController.updateProfile);
 router.delete('/profile', authenticate, CandidateController.deleteProfile);
 
+
 // Admin routes
 router.get('/', authenticate, authorize('admin'), CandidateController.getAllCandidates);
 router.get('/stats', authenticate, authorize('admin'), CandidateController.getCandidateStats);
