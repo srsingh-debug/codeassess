@@ -1,0 +1,10 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: codeassess
+  annotations:
+    github.com/project-slug: srsingh-debug/codeassess
+spec:
+  type: other
+  lifecycle: unknown
+  owner: Sugam
