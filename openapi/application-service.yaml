@@ -1,0 +1,61 @@
+openapi: 3.0.0
+info:
+  title: Application Service API
+  version: 1.0.0
+  description: API for managing job applications in CodeAssess
+servers:
+  - url: http://localhost:3004/api/applications
+    description: Local Application Service
+paths:
+  /:
+    post:
+      summary: Create a new job application
+      tags: [Applications]
+      security:
+        - bearerAuth: []
+      responses:
+        201:
+          description: Application created
+  /stats:
+    get:
+      summary: Get application statistics (Admin only)
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Statistics data
+  /job/{jobId}:
+    get:
+      summary: Get applications by job ID (Admin only)
+      tags: [Applications]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: List of applications
+  /candidate/{candidateId}:
+    get:
+      summary: Get applications by candidate ID
+      tags: [Applications]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: candidateId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: List of applications
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

@@ -1,0 +1,64 @@
+openapi: 3.0.0
+info:
+  title: Assessment Service API
+  version: 1.0.0
+  description: API for managing assessments and candidate attempts in CodeAssess
+servers:
+  - url: http://localhost:3005/api/assessments
+    description: Local Assessment Service
+paths:
+  /:
+    get:
+      summary: Get all assessments
+      tags: [Assessments]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: List of assessments
+    post:
+      summary: Create assessment (Admin only)
+      tags: [Assessments]
+      security:
+        - bearerAuth: []
+      responses:
+        201:
+          description: Assessment created
+  /stats:
+    get:
+      summary: Get assessment statistics (Admin only)
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Statistics data
+  /attempts/start:
+    post:
+      summary: Start an assessment attempt
+      tags: [Attempts]
+      security:
+        - bearerAuth: []
+      responses:
+        201:
+          description: Attempt started
+  /attempts/{attemptId}/submit:
+    post:
+      summary: Submit assessment attempt
+      tags: [Attempts]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: attemptId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: Attempt submitted
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

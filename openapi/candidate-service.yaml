@@ -1,0 +1,58 @@
+openapi: 3.0.0
+info:
+  title: Candidate Service API
+  version: 1.0.0
+  description: API for managing candidate profiles in CodeAssess
+servers:
+  - url: http://localhost:3003/api/candidates
+    description: Local Candidate Service
+paths:
+  /profile:
+    get:
+      summary: Get or create candidate profile
+      tags: [Profile]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Profile data
+    put:
+      summary: Update candidate profile
+      tags: [Profile]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Profile updated
+    delete:
+      summary: Delete candidate profile
+      tags: [Profile]
+      security:
+        - bearerAuth: []
+      responses:
+        204:
+          description: Profile deleted
+  /:
+    get:
+      summary: Get all candidates (Admin only)
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: List of candidates
+  /stats:
+    get:
+      summary: Get candidate statistics (Admin only)
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Statistics data
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
