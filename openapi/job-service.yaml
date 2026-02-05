@@ -4,8 +4,8 @@ info:
   version: 1.0.0
   description: API for managing jobs and applications in CodeAssess
 servers:
-  - url: http://localhost:3002/api
-    description: Local Job Service
+  # - url: http://localhost:3002/api
+  #   description: Local Job Service
   - url: http://localhost:3000/api-gateway/jobs
     description: API Gateway
 paths:
