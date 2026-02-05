@@ -10,6 +10,11 @@ spec:
   owner: Sugam
   providesApis:
     - my-service-api
+    - job-service-api
+    - candidate-service-api
+    - auth-service-api
+    - assessment-service-api
+    - application-service-api
 ---
 apiVersion: backstage.io/v1alpha1
 kind: API
@@ -22,3 +27,63 @@ spec:
   owner: Sugam
   definition:
     $text: ./openapi.yaml
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: job-service-api
+  description: Job and application management API
+spec:
+  type: openapi
+  lifecycle: experimental
+  owner: Sugam
+  definition:
+    $text: ./openapi/job-service.yaml
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: candidate-service-api
+  description: Candidate management API
+spec:
+  type: openapi
+  lifecycle: experimental
+  owner: Sugam
+  definition:
+    $text: ./openapi/candidate-service.yaml
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: auth-service-api
+  description: Authentication management API
+spec:
+  type: openapi
+  lifecycle: experimental
+  owner: Sugam
+  definition:
+    $text: ./openapi/auth-service.yaml
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: assessment-service-api
+  description: Assessment management API
+spec:
+  type: openapi
+  lifecycle: experimental
+  owner: Sugam
+  definition:
+    $text: ./openapi/assessment-service.yaml
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: application-service-api
+  description: Application management API
+spec:
+  type: openapi
+  lifecycle: experimental
+  owner: Sugam
+  definition:
+    $text: ./openapi/application-service.yaml
