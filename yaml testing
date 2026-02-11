@@ -1,0 +1,3891 @@
+
+openapi: 3.0.0
+info:
+  title: NPS POPBO External API Service
+  description: External API service for NPS POPBO integration with third-party services including Signzy, Protean, PRAN, PAN validation, and CKYC services
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@nps-proteantech.in
+servers:
+  - url: https://uat-pop2.proteanx.io/api-gateway/externalapi
+    description: UAT Server
+  - url: https://dev-pop2.proteanx.io/api-gateway/externalapi
+    description: Dev Server
+security:
+  - ApiKeyAuth: []
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check endpoint
+      description: Returns the health status of the service
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /api/v1/popbo-externalApi/postPensionDetails:
+    post:
+      tags:
+        - PRAN Generation
+      summary: Generate PRAN
+      description: Submit pension details to generate a new PRAN (Permanent Retirement Account Number)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PRANGenerationRequest'
+      responses:
+        '200':
+          description: PRAN generation initiated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PRANGenerationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/popbo-externalApi/trackStatus:
+    get:
+      tags:
+        - PRAN Generation
+      summary: Track PRAN generation status
+      description: |
+        Track the status of PRAN generation using reference ID
+
+        **Example curl command:**
+        ```bash
+        curl --location 'http://localhost:3011/api/v1/popbo-externalApi/trackStatus?refId=2084949' \
+        --header 'x-api-key: 616a21cf-0a6e-462d-b292-f7a6baa6d9c0'
+        ```
+      parameters:
+        - name: refId
+          in: query
+          required: true
+          description: Reference ID from PRAN generation response
+          schema:
+            type: string
+            example: '2084949'
+      responses:
+        '200':
+          description: Status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrackStatusResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/popbo-externalApi/trackStatusSubReg:
+    get:
+      tags:
+        - PRAN Generation
+      summary: Track Subscriber Registration Status
+      description: |
+        Track the status of subscriber registration using responseId and ackId
+
+        **Example curl command:**
+        ```bash
+        curl --location 'http://localhost:3011/api/v1/popbo-externalApi/trackStatusSubReg?responseId=1211197&ackId=' \
+        --header 'x-api-key: 616a21cf-0a6e-462d-b292-f7a6baa6d9c0'
+        ```
+      parameters:
+        - name: responseId
+          in: query
+          required: true
+          description: Response ID from subscriber registration
+          schema:
+            type: string
+            example: '1211197'
+        - name: ackId
+          in: query
+          required: false
+          description: Acknowledgment ID
+          schema:
+            type: string
+            example: ''
+        - name: popRegNumber
+          in: query
+          required: false
+          description: POP Registration Number
+          schema:
+            type: string
+            example: '5000111'
+        - name: popSpRegNumber
+          in: query
+          required: false
+          description: POP SP Registration Number
+          schema:
+            type: string
+            example: '5000111'
+      responses:
+        '200':
+          description: Status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrackStatusSubRegResponse'
+              example:
+                ackId: '60000021005001225'
+                fieldErrors: null
+                pran: '110179506060'
+                responseId: '1211197'
+                status: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/popbo-externalApi/bankTransfer:
+    post:
+      tags:
+        - Bank Services
+      summary: Direct Bank Account Verification via Signzy
+      description: Forward bank account verification request directly to Signzy API as-is
+      parameters:
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+            default: 616a21cf-0a6e-462d-b292-f7a6baa6d9c0
+          description: API key for authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignzyDirectBankTransferRequest'
+            example:
+              beneficiaryAccount: '00000055158889738'
+              beneficiaryIFSC: SBIN0050007
+              beneficiaryName: Sahil Sharma
+              beneficiaryMobile: '6284202730'
+              nameMatchScore: '0.7'
+              nameFuzzy: true
+              email: sahil.sharma@thewitslab.com
+      responses:
+        '200':
+          description: Bank account verification response from Signzy API (as-is)
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Response as received from Signzy API
+              example:
+                result:
+                  active: 'yes'
+                  auditTrail:
+                    nature: BANK RRN
+                    timestamp: '2025-10-28T09:31:34.235Z'
+                    value: SZYON01
+                  bankTransfer:
+                    bankRRN: SZYON01
+                    beneIFSC: SBIN0050007
+                    beneMMID: ''
+                    beneMobile: ''
+                    beneName: Mr SAHIL SHARMA
+                    response: Transaction Successful
+                  mobileMatch: not available
+                  nameMatch: 'yes'
+                  nameMatchScore: 1
+                  reason: success
+                  signzyReferenceId: Az6aQ0p6U2mrjFyescMsIosRDzkonjvGGCd4u8T50HHFZerQh431
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/popbo-externalApi/ckycVerificationAndGenerateOtp:
+    post:
+      tags:
+        - CKYC Services
+      summary: CKYC Verification And Generate OTP
+      description: Verify CKYC records and generate OTP for validation
+      parameters:
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+            default: 616a21cf-0a6e-462d-b292-f7a6baa6d9c0
+          description: API key for authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CKYCVerificationRequest'
+      responses:
+        '200':
+          description: CKYC verification successful and OTP generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CKYCVerificationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/v1/popbo-externalApi/validateOtpAndDownloadCkyc:
+    post:
+      tags:
+        - CKYC Services
+      summary: Validate OTP And Download CKYC
+      description: Validate OTP and download CKYC records
+      parameters:
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+            default: 616a21cf-0a6e-462d-b292-f7a6baa6d9c0
+          description: API key for authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CKYCValidateOtpRequest'
+      responses:
+        '200':
+          description: OTP validated and CKYC download successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CKYCDownloadResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/v1/popbo-externalApi/ePranDownload/{pranId}:
+    get:
+      tags:
+        - PRAN Generation
+      summary: Download e-PRAN
+      description: Download electronic PRAN document using PRAN ID
+      parameters:
+        - name: pranId
+          in: path
+          required: true
+          description: PRAN ID to download
+          schema:
+            type: string
+            example: '123456789012'
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+            default: 616a21cf-0a6e-462d-b292-f7a6baa6d9c0
+          description: API key for authentication
+      responses:
+        '200':
+          description: e-PRAN download successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EPranDownloadResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: PRAN not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/popbo-externalApi/subscriberDetails:
+    post:
+      tags:
+        - Subscriber Services
+      summary: Get Subscriber Details with Dynamic Credential Override
+      description: |
+        Get subscriber details with automatic credential override from database based on popRegNo header.
+
+        **Key Features:**
+        - Auto-overrides userId with SUBSCRIBER_USER_ID from database (replaces BO with WS)
+        - Works even without userId in request body
+        - Uses credentials based on x-pop-reg-no header
+        - Sets NA values when database records not found
+        - Logs all outbound headers for verification
+
+        **Available x-pop-reg-no values:**
+        - `5000111`: Default credentials (used when header not provided)
+        - `5000332`: Test credentials with userId 1300342BO → 1300342WS
+        - `5000870`: Alternative test credentials
+        - `9999999`: Non-existent (returns NA values)
+
+        **Credential Override Priority:**
+        1. Database SUBSCRIBER_USER_ID (highest priority)
+        2. Request body userId (fallback)
+        3. Empty string (when neither available)
+      parameters:
+        - name: x-api-key
+          in: header
+          required: false
+          schema:
+            type: string
+            default: 616a21cf-0a6e-462d-b292-f7a6baa6d9c0
+          description: API Key for internal authentication
+        - name: x-pop-reg-no
+          in: header
+          required: false
+          schema:
+            type: string
+            enum:
+              - '5000111'
+              - '5000332'
+              - '5000870'
+              - '9999999'
+            default: '5000332'
+          description: 'POP Registration Number for database credential lookup. If not provided, defaults to 5000111. Available values: 5000111 (default), 5000332 (test), 5000870 (alternative), 9999999 (non-existent for testing NA values)'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriberDetailsRequest'
+            example:
+              userId: 1300128WS
+              pran: '110189548025'
+              tierType: T1
+              attributeList:
+                - ALD
+      responses:
+        '200':
+          description: Subscriber details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriberDetailsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/popbo-externalApi/checkPranEligibilityOLD:
+    post:
+      tags:
+        - Subscriber Services
+      summary: Check PRAN Eligibility (OLD)
+      description: Check PRAN eligibility for contribution with various parameters. All authentication headers are handled internally via environment variables or configuration.
+      parameters:
+        - name: x-api-key
+          in: header
+          required: false
+          schema:
+            type: string
+            default: 616a21cf-0a6e-462d-b292-f7a6baa6d9c0
+          description: API Key for internal authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckPRANEligibilityRequest'
+      responses:
+        '200':
+          description: PRAN eligibility check completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckPRANEligibilityResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/popbo-externalApi/generateReceipt:
+    post:
+      tags:
+        - Subscriber Services
+      summary: Generate Receipt
+      description: Generate contribution receipt for a given PRAN and contribution details. All authentication headers are handled internally via environment variables or configuration.
+      parameters:
+        - name: x-api-key
+          in: header
+          required: false
+          schema:
+            type: string
+            default: 616a21cf-0a6e-462d-b292-f7a6baa6d9c0
+          description: API Key for internal authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReceiptGenerationRequest'
+            examples:
+              contribution:
+                summary: Contribution Receipt Generation (requestType: 12)
+                value:
+                  receiptNumber: '12600220512345678'
+                  receiptGenerateFlag: Y
+                  contributionRecGen:
+                    popRegNumber: '5000111'
+                    popSPRegNumber: '6002205'
+                    rcptDate: 01/10/2025
+                    requestType: '12'
+                    pran: '110199526095'
+                    tierType: T1
+                    paymentMode: E-TRANSFER
+                    contrAmount: '1000.00'
+                    netAmount: '1000.00'
+                    instrumentNumber: ''
+              subscription:
+                summary: Subscription Registration Receipt Generation (requestType: 11)
+                value:
+                  receiptNumber: '11600220512345678'
+                  receiptGenerateFlag: Y
+                  subRegistrationRecGenForm:
+                    popRegNumber: '5000111'
+                    popSPRegNumber: '6002205'
+                    rcptDate: 11/10/2025
+                    subscriberName: SUBHASH CHETRY
+                    fcRegNumber: '51012'
+                    formSentDate: ''
+                    tierType: T1
+                    sectorCategory: '4'
+                    requestType: '11'
+      responses:
+        '200':
+          description: Receipt generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceiptGenerationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/popbo-externalApi/checkPranEligibility:
+    post:
+      tags:
+        - Subscriber Services
+      summary: Check PRAN Eligibility
+      description: Check PRAN eligibility for contribution with various parameters. All authentication headers are handled internally via environment variables or configuration.
+      parameters:
+        - name: x-api-key
+          in: header
+          required: false
+          schema:
+            type: string
+            default: 616a21cf-0a6e-462d-b292-f7a6baa6d9c0
+          description: API Key for internal authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckPRANEligibilityBatchRequest'
+            example:
+              batchId: '50001113400023324002'
+              pran: '110107046844'
+              tierType: T1
+              userId: 1300128BO
+              month: ''
+              year: ''
+              contributionType: U
+              upldBy: U
+              subscriberContribution: '500.00'
+              employerContribution: ''
+              branchRegNo: '6002205'
+              receiptNumber: ''
+              pfmId: ''
+              receiptGenerateFlag: N
+              upldId: '5000111'
+      responses:
+        '200':
+          description: PRAN eligibility check completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckPRANEligibilityResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/aadhaar/verify:
+    post:
+      tags:
+        - Aadhaar Services
+      summary: Verify Offline Aadhaar
+      description: Extract and verify Aadhaar data from password-protected ZIP file downloaded from UIDAI website
+      consumes:
+        - multipart/form-data
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - password
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Aadhaar ZIP file downloaded from UIDAI website
+                password:
+                  type: string
+                  description: Password for the ZIP file (typically first 4 letters of name in CAPS + birth year YYYY)
+      responses:
+        '200':
+          description: Aadhaar verification successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AadhaarResponse'
+        '400':
+          description: Bad request - Invalid file or password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/aadhaar/generateOTP:
+    post:
+      tags:
+        - Aadhaar Services
+      summary: Generate OTP for Aadhaar verification
+      description: Generate OTP for Aadhaar number verification. The OTP will be sent to the mobile number registered with Aadhaar
+      parameters:
+        - in: header
+          name: x-pran
+          schema:
+            type: string
+            default: '210001234567'
+          required: false
+          description: PRAN number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AadhaarOTPRequestJSON'
+      responses:
+        '200':
+          description: OTP generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AadhaarOTPResponseJSON'
+        '400':
+          description: Bad request - Invalid Aadhaar or request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/aadhaar/fetchKYC:
+    post:
+      tags:
+        - Aadhaar Services
+      summary: Fetch KYC details using Aadhaar OTP
+      description: Fetch KYC details after OTP verification. Requires OTP received on registered mobile number
+      parameters:
+        - in: header
+          name: x-pran
+          schema:
+            type: string
+            default: '210001234567'
+          required: false
+          description: PRAN number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AadhaarKYCRequestJSON'
+      responses:
+        '200':
+          description: KYC details fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AadhaarKYCResponseJSON'
+        '400':
+          description: Bad request - Invalid OTP or request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/digilocker/getDigiKycDetails:
+    get:
+      tags:
+        - DigiLocker
+      summary: DigiLocker OAuth Callback (Public)
+      description: |
+        Processes the DigiLocker OAuth callback after user authorization. This endpoint is PUBLIC and does not require API key authentication.
+
+        **Example curl command:**
+        ```bash
+        curl --location 'https://uat-pop2.proteanx.io/api-gateway/externalapi/api/v1/digilocker/getDigiKycDetails?code=YOUR_AUTH_CODE&state=YOUR_STATE&docName=Aadhaar%20Card'
+        ```
+      security: []
+      parameters:
+        - name: code
+          in: query
+          required: true
+          description: Authorization code from DigiLocker
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: true
+          description: State parameter (contains reference number)
+          schema:
+            type: string
+        - name: docName
+          in: query
+          required: false
+          description: Document name (defaults to 'Aadhaar Card')
+          schema:
+            type: string
+            default: Aadhaar Card
+            enum:
+              - Aadhaar Card
+              - Driving License
+        - name: bulkFlag
+          in: query
+          required: false
+          description: Bulk flag for redirect URL
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Successfully processed DigiLocker callback
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: KYC data fetched and stored successfully
+                  redirectUrl:
+                    type: string
+                    example: https://frontend-url/DIY/PersonalDetails/123456
+                  refNumber:
+                    type: string
+                    description: File ID or reference number
+                    example: cea6236a-4d7a-46e4-80e3-17205e1e6cb1
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/digilocker/getKycData/{refNumber}:
+    get:
+      tags:
+        - DigiLocker
+      summary: Get KYC Data from File
+      description: |
+        Downloads and parses KYC XML data from file management service and returns structured JSON response. Can accept either a reference number or file ID.
+
+        **Example curl command:**
+        ```bash
+        curl --location 'https://uat-pop2.proteanx.io/api-gateway/externalapi/api/v1/digilocker/getKycData/cea6236a-4d7a-46e4-80e3-17205e1e6cb1' \
+        --header 'x-api-key: 616a21cf-0a6e-462d-b292-f7a6baa6d9c0'
+        ```
+      parameters:
+        - name: refNumber
+          in: path
+          required: true
+          description: Reference number or file ID
+          schema:
+            type: string
+            example: cea6236a-4d7a-46e4-80e3-17205e1e6cb1
+      responses:
+        '200':
+          description: Successfully retrieved and parsed KYC data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DigiKycDataResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: KYC data not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/protean/contribution/checkPRANContributionEligibility:
+    post:
+      tags:
+        - Contribution Services
+      summary: Check PRAN Contribution Eligibility
+      description: |
+        Check if a PRAN is eligible for contributions
+
+        **Example curl command:**
+        ```bash
+        curl --location 'http://localhost:3011/api/v1/protean/contribution/checkPRANContributionEligibility' \
+        --header 'x-api-key: 616a21cf-0a6e-462d-b292-f7a6baa6d9c0' \
+        --header 'Content-Type: application/json' \
+        --data '{
+            "popUsrType": "CORPORATE",
+            "pran": "110179506060"
+        }'
+        ```
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckPRANEligibilityRequest'
+      responses:
+        '200':
+          description: Eligibility check result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckPRANEligibilityResponse'
+  /api/v1/protean/contribution/accountStatus:
+    post:
+      tags:
+        - Contribution Services
+      summary: Get Account Status
+      description: Get the status of a PRAN account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountStatusRequest'
+      responses:
+        '200':
+          description: Account status retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountStatusResponse'
+  /api/v1/subscriber/contribution/checkpraneligibility:
+    post:
+      tags:
+        - Contribution Services
+      summary: Check PRAN Eligibility (External Service)
+      description: |
+        Check PRAN eligibility for contribution with external service
+
+        **Example curl command:**
+        ```bash
+        curl --location 'http://localhost:3011/api/v1/subscriber/contribution/checkpraneligibility' \
+        --header 'x-api-key: 616a21cf-0a6e-462d-b292-f7a6baa6d9c0' \
+        --header 'Content-Type: application/json' \
+        --data '{
+            "batchId": "BATCH123",
+            "pran": "110179506060",
+            "tierType": "T1",
+            "userId": "USER001",
+            "month": "12",
+            "year": "2024",
+            "contributionType": "VOLUNTARY",
+            "upldBy": "SYSTEM",
+            "subscriberContribution": "5000",
+            "employerContribution": "5000",
+            "branchRegNo": "BR001",
+            "receiptNumber": "REC001",
+            "pfmId": "PFM001",
+            "receiptGenerateFlag": "Y",
+            "upldId": "UPL001"
+        }'
+        ```
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PRANEligibilityRequest'
+      responses:
+        '200':
+          description: Eligibility check result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PRANEligibilityResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/protean/contribution/viewSubscriberDetails:
+    post:
+      tags:
+        - Contribution Services
+      summary: View Subscriber Details
+      description: Get detailed information about a subscriber
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ViewSubscriberDetailsRequest'
+      responses:
+        '200':
+          description: Subscriber details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ViewSubscriberDetailsResponse'
+  /api/v1/popbo-externalApi/mobileToAccount:
+    post:
+      tags:
+        - Bank Services
+      summary: Direct Mobile to Account lookup via Signzy
+      description: Forward mobile to account lookup request directly to Signzy API as-is
+      parameters:
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+            default: 616a21cf-0a6e-462d-b292-f7a6baa6d9c0
+          description: API key for authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignzyDirectMobileToAccountRequest'
+            example:
+              mobileNumber: '6284202730'
+      responses:
+        '200':
+          description: Mobile to account lookup response from Signzy API (as-is)
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Response as received from Signzy API
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/popbo-externalApi/fetchBankPin:
+    post:
+      tags:
+        - Location Services
+      summary: Fetch bank details by PIN code
+      description: Retrieves location and bank details for a given PIN code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FetchBankPinRequest'
+            examples:
+              mumbai:
+                summary: Mumbai PIN
+                value:
+                  pinCode: '400001'
+              delhi:
+                summary: Delhi PIN
+                value:
+                  pinCode: '110001'
+              bangalore:
+                summary: Bangalore PIN
+                value:
+                  pinCode: '560001'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankPinResponse'
+              example:
+                circleName: Maharashtra
+                districtName: Mumbai
+                divisionName: Mumbai South
+                fieldErrors: null
+                pinCode: 400001
+                regionName: Mumbai
+                stateName: MAHARASHTRA
+                taluk: Mumbai
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/popbo-externalApi/fetchIFSC:
+    post:
+      tags:
+        - Bank Services
+      summary: Fetch bank details by IFSC code
+      description: Retrieves bank branch details for a given IFSC code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FetchIFSCRequest'
+            examples:
+              sbi:
+                summary: State Bank of India
+                value:
+                  ifscCode: SBIN0001234
+              hdfc:
+                summary: HDFC Bank
+                value:
+                  ifscCode: HDFC0000001
+              icici:
+                summary: ICICI Bank
+                value:
+                  ifscCode: ICIC0000001
+              pnb:
+                summary: Punjab National Bank
+                value:
+                  ifscCode: PUNB0000100
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IFSCResponse'
+              example:
+                bicmBnkAddr: PATNA,STATE BIHAR,PIN 800008
+                bicmBnkBrch: HAJIGANJ
+                bicmBnkIfsc: SBIN0001234
+                bicmBnkMicr: '800002019'
+                bicmBnkName: STATE BANK OF INDIA
+                fieldErrors: null
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/cashfree/orders:
+    post:
+      tags:
+        - Cashfree Services
+      summary: Create Cashfree order
+      description: Create a new payment order in Cashfree payment gateway
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CashfreeOrderRequest'
+      responses:
+        '200':
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CashfreeOrderResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/cashfree/orders/{orderId}:
+    get:
+      tags:
+        - Cashfree Services
+      summary: Get order details
+      description: Retrieve details of a specific Cashfree order
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          description: Cashfree order ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CashfreeOrderDetails'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/v1/cashfree/orders/{orderId}/pay:
+    post:
+      tags:
+        - Cashfree Services
+      summary: Submit payment for order
+      description: Process payment for a specific Cashfree order
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          description: Cashfree order ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CashfreePaymentRequest'
+      responses:
+        '200':
+          description: Payment processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CashfreePaymentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/cashfree/links:
+    post:
+      tags:
+        - Cashfree Services
+      summary: Create payment link
+      description: Create a shareable payment link for collecting payments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CashfreePaymentLinkRequest'
+      responses:
+        '200':
+          description: Payment link created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CashfreePaymentLinkResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/cashfree/subscription-plans:
+    post:
+      tags:
+        - Cashfree Services
+      summary: Create subscription plan
+      description: Create a new subscription plan for recurring payments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CashfreeSubscriptionPlanRequest'
+      responses:
+        '200':
+          description: Subscription plan created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CashfreeSubscriptionPlanResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/cashfree/subscriptions:
+    post:
+      tags:
+        - Cashfree Services
+      summary: Create subscription
+      description: Create a new subscription for a customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CashfreeSubscriptionRequest'
+      responses:
+        '200':
+          description: Subscription created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CashfreeSubscriptionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/cashfree/subscriptions/{subscriptionId}:
+    get:
+      tags:
+        - Cashfree Services
+      summary: Get subscription details
+      description: Retrieve details of a specific subscription
+      parameters:
+        - name: subscriptionId
+          in: path
+          required: true
+          description: Cashfree subscription ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Subscription details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CashfreeSubscriptionDetails'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/v1/cashfree/subscriptions/{subscriptionId}/cancel:
+    post:
+      tags:
+        - Cashfree Services
+      summary: Cancel subscription
+      description: Cancel an active subscription
+      parameters:
+        - name: subscriptionId
+          in: path
+          required: true
+          description: Cashfree subscription ID
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CashfreeCancelSubscriptionRequest'
+      responses:
+        '200':
+          description: Subscription cancelled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CashfreeCancelSubscriptionResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/v1/cashfree/webhook:
+    post:
+      tags:
+        - Cashfree Services
+      summary: Cashfree webhook handler
+      description: Handle webhook notifications from Cashfree
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CashfreeWebhookPayload'
+      responses:
+        '200':
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: SUCCESS
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/v2/cashfree/subscriptions:
+    post:
+      tags:
+        - Cashfree Services
+      summary: Create V2 subscription
+      description: Create a new subscription using Cashfree V2 API
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CashfreeV2SubscriptionRequest'
+      responses:
+        '200':
+          description: V2 Subscription created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CashfreeV2SubscriptionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v2/cashfree/subscriptions/init:
+    post:
+      tags:
+        - Cashfree Services
+      summary: Create V2 subscription (init)
+      description: Initialize a new subscription using the correct V2 API implementation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CashfreeV2SubscriptionRequest'
+      responses:
+        '200':
+          description: V2 Subscription created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CashfreeV2SubscriptionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v2/cashfree/subscriptions/hybrid:
+    post:
+      tags:
+        - Cashfree Services
+      summary: Create V2 subscription (hybrid)
+      description: Create a new subscription using the hybrid V2 API approach
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CashfreeV2SubscriptionRequest'
+      responses:
+        '200':
+          description: V2 Subscription created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CashfreeV2SubscriptionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v2/cashfree/subscriptions/seamless:
+    post:
+      tags:
+        - Cashfree Services
+      summary: Create V2 subscription (seamless)
+      description: Create a new subscription using the seamless V2 API approach
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CashfreeV2SubscriptionRequest'
+      responses:
+        '200':
+          description: V2 Subscription created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CashfreeV2SubscriptionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v2/cashfree/plans:
+    post:
+      tags:
+        - Cashfree Services
+      summary: Create V2 plan
+      description: Create a new plan using Cashfree V2 API
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CashfreeV2PlanRequest'
+      responses:
+        '200':
+          description: V2 Plan created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CashfreeV2PlanResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/popbo-externalApi/duplicateCheck:
+    post:
+      tags:
+        - PAN Services
+      summary: PAN Duplicate Check
+      description: Check if PAN already exists in CRA systems (CAMS, KFintech, NSDL)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DuplicateCheckRequest'
+            examples:
+              basic:
+                summary: Basic duplicate check
+                value:
+                  userId: 1300987BO
+                  pan: KXPPS3076A
+                  pran: ''
+              full:
+                summary: Full duplicate check with all fields
+                value:
+                  userId: 1300987BO
+                  pan: KXPPS3076A
+                  pran: ''
+                  bankIFScode: SBIN0001234
+                  bankAccNo: '12345678901'
+                  emailId: test@example.com
+                  mobNumber: '9876543210'
+                  inPopRegNo: '5000111'
+                  checkAllCRA: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DuplicateCheckResponse'
+              examples:
+                no_duplicate:
+                  summary: No duplicate found
+                  value:
+                    status: SUCCESS
+                    message: Duplicate check completed
+                    pan: KXPPS3076A
+                    pranConfirmation: N
+                    pranStatus: VALID
+                    description: No duplicate found
+                    isDuplicate: false
+                    duplicateDetails: []
+                duplicate_found:
+                  summary: Duplicate found
+                  value:
+                    status: SUCCESS
+                    message: Duplicate check completed
+                    pan: KXPPS3076A
+                    pranConfirmation: Y
+                    pranStatus: DUPLICATE
+                    description: PAN already exists in CRA systems
+                    isDuplicate: true
+                    duplicateDetails:
+                      - pan: KXPPS3076A
+                        pran: '123456789012'
+                        status: ACTIVE
+                        craName: CAMS
+                        isDuplicate: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/TIN/PanInquiryAPIBackEnd:
+    post:
+      tags:
+        - PAN Services
+      summary: TIN/PAN Inquiry API Backend
+      description: Handle TIN/PAN inquiry requests with mock mode support. Returns PAN validation details including seeding status.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TINPanInquiryRequest'
+            examples:
+              single_pan:
+                summary: Single PAN inquiry
+                value:
+                  inputData:
+                    - pan: AAAPA0039K
+                      name: Gajendra Mehra
+                      fathername: ''
+                      dob: 18/10/1989
+              multiple_pans:
+                summary: Multiple PAN inquiry
+                value:
+                  inputData:
+                    - pan: DKTPM0894L
+                      name: Test User 1
+                      fathername: ''
+                      dob: 01/01/1990
+                    - pan: AAAPA0039K
+                      name: Gajendra Mehra
+                      fathername: ''
+                      dob: 18/10/1989
+              special_pans:
+                summary: Special mock PANs (DKTPM0894L/M/N)
+                value:
+                  inputData:
+                    - pan: DKTPM0894M
+                      name: Test User
+                      fathername: ''
+                      dob: 01/01/1990
+      responses:
+        '200':
+          description: Successful PAN inquiry response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TINPanInquiryResponse'
+              examples:
+                default_response:
+                  summary: Default PAN response
+                  value:
+                    response_Code: '1'
+                    outputData:
+                      - pan: AAAPA0039K
+                        pan_status: E
+                        name: Y
+                        fathername: ''
+                        dob: Y
+                        seeding_status: Y
+                special_pan_response:
+                  summary: Special PAN response (DKTPM0894L)
+                  value:
+                    response_Code: '1'
+                    outputData:
+                      - pan: YTUPO9089I
+                        pan_status: N
+                        name: ''
+                        fathername: ''
+                        dob: ''
+                        seeding_status: ''
+                multiple_response:
+                  summary: Multiple PAN response
+                  value:
+                    response_Code: '1'
+                    outputData:
+                      - pan: YTUPO9089I
+                        pan_status: N
+                        name: ''
+                        fathername: ''
+                        dob: ''
+                        seeding_status: ''
+                      - pan: AAAPA0039K
+                        pan_status: E
+                        name: Y
+                        fathername: ''
+                        dob: Y
+                        seeding_status: Y
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: "Click 'Authorize' button and enter this API key: 616a21cf-0a6e-462d-b292-f7a6baa6d9c0"
+    PopRegNoAuth:
+      type: apiKey
+      in: header
+      name: x-pop-reg-no
+      description: 'POP Registration Number for credential lookup. Available values: 5000111 (default), 5000332, 5000870, 9999999. If not provided, defaults to 5000111.'
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: UP
+        timestamp:
+          type: string
+          format: date-time
+        version:
+          type: string
+          example: 1.0.0
+    PRANGenerationRequest:
+      type: object
+      required:
+        - popSpRegNo
+        - fullname
+        - fathername
+        - dateofbirth
+        - pannumber
+        - mobileno
+      properties:
+        popSpRegNo:
+          type: string
+          description: POP SP registration number
+          example: '6006394'
+        fullname:
+          type: string
+          description: Full name of the subscriber
+          example: Sourav Mandal
+        fathername:
+          type: string
+          description: Father's name
+          example: Alok Mandal
+        dateofbirth:
+          type: string
+          description: Date of birth in DD-MM-YYYY format
+          pattern: ^\d{2}-\d{2}-\d{4}$
+          example: 08-02-1988
+        pannumber:
+          type: string
+          description: PAN number
+          pattern: ^[A-Z]{5}[0-9]{4}[A-Z]$
+          example: CWTPM4866K
+        mobileno:
+          type: string
+          description: Mobile number
+          pattern: ^[0-9]{10}$
+          example: '8017122216'
+        permanentAddress:
+          type: string
+          description: Permanent address
+          example: Kolkata
+        Landmark:
+          type: string
+          description: Address landmark
+          example: ''
+        aadhaarNumber:
+          type: string
+          description: Aadhaar number
+          pattern: ^[0-9]{12}$
+          example: '123456781234'
+        initialDetails:
+          type: object
+          description: Initial registration details
+        personalDetails:
+          type: object
+          description: Personal information
+        contactDetails:
+          type: object
+          description: Contact information
+        fatcaDetails:
+          type: object
+          description: FATCA declaration details
+        bankDetails:
+          type: object
+          description: Bank account details
+        employmentDetails:
+          type: object
+          description: Employment information
+        schemeDetails:
+          type: object
+          description: Scheme selection details
+        nominationDetails:
+          type: object
+          description: Nominee information
+        photoSignatureDetails:
+          type: object
+          description: Photo and signature details
+    PRANGenerationResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - SUCCESS
+            - FAILED
+          example: SUCCESS
+        message:
+          type: string
+          example: Request processed
+        responseData:
+          type: object
+          properties:
+            response-id:
+              type: string
+              description: Reference ID for tracking
+              example: '2084949'
+            status:
+              type: string
+              enum:
+                - success
+                - fail
+              example: success
+            errorList:
+              type: array
+              items:
+                type: object
+                additionalProperties:
+                  type: string
+        popRegNo:
+          type: string
+          example: '6006394'
+        jsrStatus:
+          type: string
+          example: success
+    TrackStatusResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - SUCCESS
+            - FAILED
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            refId:
+              type: string
+            pranStatus:
+              type: string
+            pran:
+              type: string
+            remarks:
+              type: string
+    TrackStatusSubRegRequest:
+      type: object
+      required:
+        - responseId
+      properties:
+        responseId:
+          type: string
+          description: Response ID from subscriber registration
+          example: '2111751'
+        ackId:
+          type: string
+          description: Acknowledgment ID
+          example: ''
+    TrackStatusSubRegResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - SUCCESS
+            - FAILED
+          description: Status of the tracking request
+        message:
+          type: string
+          description: Response message
+        responseId:
+          type: string
+          description: Response ID echoed back
+        ackId:
+          type: string
+          description: Acknowledgment ID echoed back
+        trackingData:
+          type: object
+          description: Tracking data from Protean API
+          additionalProperties: true
+    PANEnquiryRequest:
+      type: object
+      required:
+        - pan
+      properties:
+        pan:
+          type: string
+          description: PAN number to enquire
+          pattern: ^[A-Z]{5}[0-9]{4}[A-Z]$
+          example: CWTPM4866K
+    PANEnquiryResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - SUCCESS
+            - FAILED
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            panNumber:
+              type: string
+            name:
+              type: string
+            status:
+              type: string
+    PANEnquiryV2Request:
+      type: object
+      required:
+        - pan
+        - dob
+      properties:
+        pan:
+          type: string
+          description: PAN number
+          pattern: ^[A-Z]{5}[0-9]{4}[A-Z]$
+          example: CWTPM4866K
+        dob:
+          type: string
+          description: Date of birth in DD-MM-YYYY format
+          pattern: ^\d{2}-\d{2}-\d{4}$
+          example: 08-02-1988
+    PANEnquiryV2Response:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            panDetails:
+              type: object
+    ValidatePANRequest:
+      type: object
+      required:
+        - panNumber
+        - name
+        - dob
+        - popRegNo
+      properties:
+        panNumber:
+          type: string
+          description: PAN number to validate
+          example: AAAAA0000A
+        name:
+          type: string
+          description: Name as per PAN
+          example: TEST USER
+        dob:
+          type: string
+          description: Date of birth
+          example: 01-01-1990
+        popRegNo:
+          type: string
+          description: POP registration number
+          example: POP123456
+    ValidatePANResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - SUCCESS
+            - FAILED
+        data:
+          type: object
+          properties:
+            panValid:
+              type: boolean
+            nameMatch:
+              type: boolean
+            message:
+              type: string
+    PANStatusEnquiryRequest:
+      type: object
+      required:
+        - acknowledgmentNumber
+      properties:
+        acknowledgmentNumber:
+          type: string
+          description: PAN application acknowledgment number
+    PANStatusEnquiryResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        applicationStatus:
+          type: string
+        message:
+          type: string
+    BankTransferRequest:
+      type: object
+      required:
+        - accountNumber
+        - ifscCode
+        - bankName
+        - accountHolderName
+        - formRefNo
+      properties:
+        accountNumber:
+          type: string
+          description: Bank account number
+          example: '20231527025'
+        ifscCode:
+          type: string
+          description: IFSC code of the bank
+          example: SBIN0007688
+        bankName:
+          type: string
+          description: Bank name
+          example: HDFC BANK
+        accountHolderName:
+          type: string
+          description: Account holder name
+          example: RAHUL SHARMA
+        formRefNo:
+          type: string
+          description: Form reference number
+          example: FORM987654
+        mobileNumber:
+          type: string
+          description: Mobile number of the account holder
+          example: '8847536815'
+        nameMatchScore:
+          type: number
+          description: Name match threshold score (0-1)
+          example: 0.5
+          minimum: 0
+          maximum: 1
+        email:
+          type: string
+          description: Email address for verification
+          example: rahul.sharma@example.com
+        clientUniqueId:
+          type: string
+          description: Unique client ID for tracking
+          example: NSDL_FORM987654_1234567890
+    BankTransferResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - SUCCESS
+            - FAILED
+            - NAME_MISMATCH
+        message:
+          type: string
+        verificationId:
+          type: string
+          description: Verification ID from Signzy
+        requestId:
+          type: string
+          description: Request ID for tracking
+        verificationStatus:
+          type: string
+          description: Detailed verification status
+        bankDetails:
+          type: object
+          description: Bank account verification details
+        result:
+          type: object
+          description: Complete verification result
+    CKYCVerificationRequest:
+      type: object
+      required:
+        - formRefNo
+        - idNumber
+        - idType
+        - mobileNumber
+      properties:
+        formRefNo:
+          type: string
+          description: Form reference number
+          example: '34563456'
+        idNumber:
+          type: string
+          description: ID number (PAN/Aadhaar)
+          example: DKTPM0894L
+        idType:
+          type: string
+          enum:
+            - C
+            - A
+            - V
+            - U
+          description: ID type - C for PAN, A for Aadhaar, V for VID, U for UID
+          example: C
+        mobileNumber:
+          type: string
+          description: Mobile number for OTP
+          example: '8755515001'
+    CKYCVerificationResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - SUCCESS
+            - FAILED
+        message:
+          type: string
+        data:
+          type: object
+          description: Verification response data
+    CKYCValidateOtpRequest:
+      type: object
+      required:
+        - formRefNo
+        - otp
+      properties:
+        formRefNo:
+          type: string
+          description: Form reference number
+          example: '34563456'
+        otp:
+          type: string
+          description: OTP received on mobile
+          example: '123456'
+    CKYCDownloadResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - SUCCESS
+            - FAILED
+        message:
+          type: string
+        data:
+          type: object
+          description: CKYC record data
+    CheckPRANEligibilityRequest:
+      type: object
+      required:
+        - pran
+      properties:
+        popUsrType:
+          type: string
+          description: POP user type
+          example: CORPORATE
+        pran:
+          type: string
+          description: PRAN number
+          example: '110179506060'
+    PRANEligibilityRequest:
+      type: object
+      required:
+        - batchId
+        - pran
+        - tierType
+      properties:
+        batchId:
+          type: string
+          description: Batch ID
+          example: BATCH123
+        pran:
+          type: string
+          description: PRAN number
+          example: '110179506060'
+        tierType:
+          type: string
+          description: Tier type (T1/T2)
+          example: T1
+        userId:
+          type: string
+          description: User ID
+          example: USER001
+        month:
+          type: string
+          description: Contribution month
+          example: '12'
+        year:
+          type: string
+          description: Contribution year
+          example: '2024'
+        contributionType:
+          type: string
+          description: Type of contribution
+          example: VOLUNTARY
+        upldBy:
+          type: string
+          description: Uploaded by
+          example: SYSTEM
+        subscriberContribution:
+          type: string
+          description: Subscriber contribution amount
+          example: '5000'
+        employerContribution:
+          type: string
+          description: Employer contribution amount
+          example: '5000'
+        branchRegNo:
+          type: string
+          description: Branch registration number
+          example: BR001
+        receiptNumber:
+          type: string
+          description: Receipt number
+          example: REC001
+        pfmId:
+          type: string
+          description: PFM ID
+          example: PFM001
+        receiptGenerateFlag:
+          type: string
+          description: Receipt generation flag (Y/N)
+          example: Y
+        upldId:
+          type: string
+          description: Upload ID
+          example: UPL001
+    PRANEligibilityResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: SUCCESS
+        message:
+          type: string
+          example: PRAN eligibility check completed
+        data:
+          type: object
+          description: Response data from external API
+        responseCode:
+          type: string
+          description: Response code from external API
+        responseMessage:
+          type: string
+          description: Response message from external API
+    CheckPRANEligibilityResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        eligible:
+          type: boolean
+        message:
+          type: string
+    EPranDownloadResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - SUCCESS
+            - FAILED
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            pranId:
+              type: string
+              description: PRAN ID
+            documentUrl:
+              type: string
+              description: URL to download e-PRAN document
+            expiryDate:
+              type: string
+              description: Document expiry date
+    SubscriberDetailsRequest:
+      type: object
+      required:
+        - userId
+        - pran
+        - tierType
+        - attributeList
+      properties:
+        userId:
+          type: string
+          description: User ID
+          example: 1300128WS
+        pran:
+          type: string
+          description: PRAN number (12 digits)
+          example: '110189548025'
+          minLength: 12
+          maxLength: 12
+        tierType:
+          type: string
+          enum:
+            - T1
+            - T2
+          description: Tier type
+          example: T1
+        attributeList:
+          type: array
+          items:
+            type: string
+          description: List of attributes to retrieve
+          example:
+            - ALD
+          minItems: 1
+    SubscriberDetailsResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - SUCCESS
+            - FAILED
+        message:
+          type: string
+        data:
+          type: object
+          description: Subscriber details data
+    CheckPRANEligibilityBatchRequest:
+      type: object
+      required:
+        - batchId
+        - pran
+        - tierType
+        - userId
+        - contributionType
+        - upldBy
+        - branchRegNo
+        - receiptGenerateFlag
+        - upldId
+      properties:
+        batchId:
+          type: string
+          description: Batch ID
+          example: '50001113400023324002'
+        pran:
+          type: string
+          description: PRAN number (12 digits)
+          example: '110107046844'
+          minLength: 12
+          maxLength: 12
+        tierType:
+          type: string
+          enum:
+            - T1
+            - T2
+          description: Tier type
+          example: T1
+        userId:
+          type: string
+          description: User ID
+          example: 1300128BO
+        month:
+          type: string
+          description: Month (optional)
+          example: ''
+        year:
+          type: string
+          description: Year (optional)
+          example: ''
+        contributionType:
+          type: string
+          enum:
+            - U
+            - E
+          description: Contribution type - U for User, E for Employer
+          example: U
+        upldBy:
+          type: string
+          enum:
+            - U
+            - E
+          description: Uploaded by - U for User, E for Employer
+          example: U
+        subscriberContribution:
+          type: string
+          description: Subscriber contribution amount
+          example: '500.00'
+        employerContribution:
+          type: string
+          description: Employer contribution amount (optional)
+          example: ''
+        branchRegNo:
+          type: string
+          description: Branch registration number
+          example: '6002205'
+        receiptNumber:
+          type: string
+          description: Receipt number (optional)
+          example: ''
+        pfmId:
+          type: string
+          description: PFM ID (optional)
+          example: ''
+        receiptGenerateFlag:
+          type: string
+          enum:
+            - Y
+            - N
+          description: Receipt generate flag - Y for Yes, N for No
+          example: N
+        upldId:
+          type: string
+          description: Upload ID
+          example: '5000111'
+    ReceiptGenerationRequest:
+      type: object
+      required:
+        - receiptNumber
+        - receiptGenerateFlag
+      properties:
+        userId:
+          type: string
+          description: User ID (optional, will be populated from environment if not provided)
+          example: 1300128BO
+        receiptNumber:
+          type: string
+          description: Receipt number
+          example: '12600220512345678'
+        receiptGenerateFlag:
+          type: string
+          enum:
+            - Y
+            - N
+          description: Receipt generation flag
+          example: Y
+        contributionRecGen:
+          type: object
+          description: Contribution receipt generation details (for requestType: 12). Either this or subRegistrationRecGenForm must be provided.
+          properties:
+            popRegNumber:
+              type: string
+              description: POP registration number
+              example: '5000111'
+            popSPRegNumber:
+              type: string
+              description: POP SP registration number
+              example: '6002205'
+            rcptDate:
+              type: string
+              description: Receipt date
+              example: 01/10/2025
+            requestType:
+              type: string
+              description: Request type (12 for contribution)
+              example: '12'
+            pran:
+              type: string
+              description: 12-digit PRAN number
+              minLength: 12
+              maxLength: 12
+              example: '110199526095'
+            tierType:
+              type: string
+              enum:
+                - T1
+                - T2
+                - BO
+              description: Tier type
+              example: T1
+            paymentMode:
+              type: string
+              description: Payment mode
+              example: E-TRANSFER
+            contrAmount:
+              type: string
+              description: Contribution amount
+              example: '1000.00'
+            netAmount:
+              type: string
+              description: Net amount
+              example: '1000.00'
+            instrumentNumber:
+              type: string
+              description: Instrument number (optional)
+              example: ''
+        subRegistrationRecGenForm:
+          type: object
+          description: Subscription registration receipt generation details (for requestType: 11). Either this or contributionRecGen must be provided.
+          properties:
+            popRegNumber:
+              type: string
+              description: POP registration number
+              example: '5000111'
+            popSPRegNumber:
+              type: string
+              description: POP SP registration number
+              example: '6002205'
+            rcptDate:
+              type: string
+              description: Receipt date
+              example: 11/10/2025
+            subscriberName:
+              type: string
+              description: Subscriber name
+              example: SUBHASH CHETRY
+            fcRegNumber:
+              type: string
+              description: FC registration number
+              example: '51012'
+            formSentDate:
+              type: string
+              description: Form sent date (optional)
+              example: ''
+            tierType:
+              type: string
+              enum:
+                - T1
+                - T2
+                - BO
+              description: Tier type
+              example: T1
+            sectorCategory:
+              type: string
+              description: Sector category
+              example: '4'
+            requestType:
+              type: string
+              description: Request type (11 for subscription registration)
+              example: '11'
+    ReceiptGenerationResponse:
+      type: object
+      properties:
+        requestHeader:
+          type: object
+          properties:
+            messageId:
+              type: string
+            requestId:
+              type: string
+            groupId:
+              type: string
+            responseType:
+              type: string
+            serviceName:
+              type: string
+            entityRegNumber:
+              type: string
+            requestType:
+              type: string
+            requestDateTime:
+              type: string
+            requestMessageId:
+              type: string
+        responseBody:
+          type: object
+          properties:
+            contributionRecGenRes:
+              type: object
+              properties:
+                batchId:
+                  type: string
+                pran:
+                  type: string
+                contributionStatusId:
+                  type: string
+                acknowledgementNo:
+                  type: string
+                receiptBase64:
+                  type: string
+                  description: Base64 encoded receipt PDF
+                receiptUrl:
+                  type: string
+                  description: URL to download the receipt
+                errorCode:
+                  type: string
+                errorDescription:
+                  type: string
+    AccountStatusRequest:
+      type: object
+      required:
+        - pran
+      properties:
+        pran:
+          type: string
+          description: PRAN number
+    AccountStatusResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        accountStatus:
+          type: string
+        tier1Balance:
+          type: number
+        tier2Balance:
+          type: number
+    ViewSubscriberDetailsRequest:
+      type: object
+      required:
+        - pran
+      properties:
+        pran:
+          type: string
+          description: PRAN number
+    ViewSubscriberDetailsResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        subscriberDetails:
+          type: object
+          properties:
+            name:
+              type: string
+            pran:
+              type: string
+            dob:
+              type: string
+            email:
+              type: string
+            mobile:
+              type: string
+    MobileToAccountRequest:
+      type: object
+      required:
+        - mobile_number
+        - fetch_branch_details
+        - is_consent_granted
+      properties:
+        mobile_number:
+          type: string
+          description: Mobile number to lookup
+          example: '9999999999'
+        fetch_branch_details:
+          type: boolean
+          description: Whether to fetch branch details
+          example: true
+        is_consent_granted:
+          type: boolean
+          description: User consent for the lookup
+          example: true
+    MobileToAccountResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: SUCCESS
+        message:
+          type: string
+          example: Account details retrieved successfully
+        decentro_txn_id:
+          type: string
+          example: F6A3A1E20475453FA60F926440446B80
+        responseCode:
+          type: string
+          example: S00000
+        responseKey:
+          type: string
+          example: success_account_details_retrieved
+        bankingAPIMessage:
+          type: string
+        data:
+          type: object
+          properties:
+            upiVpa:
+              type: string
+              example: 2266657824@ptsbi
+            nameAsPerBank:
+              type: string
+              example: Mahendra Singh Dhoni
+            accountNumber:
+              type: string
+              example: '847024704298432'
+            bankName:
+              type: string
+              example: HDFC Bank
+            ifsc:
+              type: string
+              example: HDFC0000001
+            bankReferenceNumber:
+              type: string
+              example: '428300034749'
+            payoutStatus:
+              type: string
+              example: SUCCESS
+            payoutAmount:
+              type: string
+              example: '0.01'
+            branchDetails:
+              type: object
+              properties:
+                branchVerificationResponseKey:
+                  type: string
+                  example: success_branch_details_found
+                bank:
+                  type: string
+                  example: HDFC Bank
+                ifsc:
+                  type: string
+                  example: HDFC0000001
+                branch:
+                  type: string
+                  example: TULSIANI CHMBRS - NARIMAN PT
+                centre:
+                  type: string
+                  example: MUMBAI
+                district:
+                  type: string
+                  example: MUMBAI
+                state:
+                  type: string
+                  example: MAHARASHTRA
+                contact:
+                  type: string
+                  example: '919890603333'
+                address:
+                  type: string
+                  example: 101-104 TULSIANI CHAMBERSFREE PRESS JOURNAL MARGNARIMAN POINTMUMBAI MAHARASHTRA 400 021
+                imps:
+                  type: boolean
+                  example: true
+                rtgs:
+                  type: boolean
+                  example: true
+                neft:
+                  type: boolean
+                  example: true
+                micr:
+                  type: string
+                  example: '400240003'
+                city:
+                  type: string
+                  example: GREATER MUMBAI
+                swift:
+                  type: string
+                  example: HDFCINBB
+                upi:
+                  type: boolean
+                  example: true
+    FetchBankPinRequest:
+      type: object
+      required:
+        - pinCode
+      properties:
+        pinCode:
+          type: string
+          description: PIN code to fetch location details for
+          example: '400001'
+          pattern: ^[0-9]{6}$
+    BankPinResponse:
+      type: object
+      properties:
+        circleName:
+          type: string
+          description: Circle name
+          example: Maharashtra
+        districtName:
+          type: string
+          description: District name
+          example: Mumbai
+        divisionName:
+          type: string
+          description: Division name
+          example: Mumbai South
+        fieldErrors:
+          type: object
+          nullable: true
+          description: Field validation errors
+        pinCode:
+          type: integer
+          description: PIN code
+          example: 400001
+        regionName:
+          type: string
+          description: Region name
+          example: Mumbai
+        stateName:
+          type: string
+          description: State name
+          example: MAHARASHTRA
+        taluk:
+          type: string
+          description: Taluk name
+          example: Mumbai
+    FetchIFSCRequest:
+      type: object
+      required:
+        - ifscCode
+      properties:
+        ifscCode:
+          type: string
+          description: IFSC code to fetch bank details for
+          example: SBIN0001234
+          pattern: ^[A-Z]{4}0[A-Z0-9]{6}$
+    IFSCResponse:
+      type: object
+      properties:
+        bicmBnkAddr:
+          type: string
+          description: Bank branch address
+          example: PATNA,STATE BIHAR,PIN 800008
+        bicmBnkBrch:
+          type: string
+          description: Bank branch name
+          example: HAJIGANJ
+        bicmBnkIfsc:
+          type: string
+          description: Bank IFSC code
+          example: SBIN0001234
+        bicmBnkMicr:
+          type: string
+          description: Bank MICR code
+          example: '800002019'
+        bicmBnkName:
+          type: string
+          description: Bank name
+          example: STATE BANK OF INDIA
+        fieldErrors:
+          type: object
+          nullable: true
+          description: Field validation errors
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          description: Additional error details
+    AadhaarResponse:
+      type: object
+      properties:
+        referenceId:
+          type: string
+          description: Aadhaar reference ID
+          example: '12345678901234567890'
+        uid:
+          type: string
+          description: Masked Aadhaar UID (first 4 digits)
+          example: '1234'
+        fullName:
+          type: string
+          description: Full name as per Aadhaar
+          example: John Doe
+        dob:
+          type: string
+          description: Date of birth
+          example: 01-01-1990
+        gender:
+          type: string
+          description: Gender (M/F/T)
+          example: M
+        mobileHash:
+          type: string
+          description: Hashed mobile number
+          example: hashedmobile
+        photoBase64:
+          type: string
+          description: Base64 encoded photo
+          example: base64encodedphoto...
+        address:
+          $ref: '#/components/schemas/AadhaarAddress'
+    AadhaarAddress:
+      type: object
+      properties:
+        careof:
+          type: string
+          description: Care of
+          example: 'S/O: Father Name'
+        house:
+          type: string
+          description: House/Building number
+          example: '123'
+        street:
+          type: string
+          description: Street name
+          example: Main Street
+        landmark:
+          type: string
+          description: Landmark
+          example: Near Temple
+        locality:
+          type: string
+          description: Locality/Area
+          example: Locality Name
+        vtc:
+          type: string
+          description: Village/Town/City
+          example: City Name
+        subdist:
+          type: string
+          description: Sub District
+          example: Sub District
+        dist:
+          type: string
+          description: District
+          example: District Name
+        state:
+          type: string
+          description: State
+          example: State Name
+        country:
+          type: string
+          description: Country
+          example: India
+        po:
+          type: string
+          description: Post Office
+          example: Post Office Name
+        pc:
+          type: string
+          description: PIN Code
+          example: '123456'
+    DigiKycDataResponse:
+      type: object
+      properties:
+        referenceId:
+          type: string
+          description: Reference ID or file ID
+          example: cea6236a-4d7a-46e4-80e3-17205e1e6cb1
+        uid:
+          type: string
+          description: Masked Aadhaar UID
+          example: xxxxxxxx9414
+        fullName:
+          type: string
+          description: Full name from KYC document
+          example: Test user
+        dob:
+          type: string
+          description: Date of birth
+          example: 24-08-1995
+        gender:
+          type: string
+          description: Gender (M/F)
+          example: M
+        mobileHash:
+          type: string
+          description: Hashed mobile number
+          example: 1757d727e95b6f0ba418ee5a82504ca7ca5efa7c2c01a1160899a8ea39255c6e
+        photoBase64:
+          type: string
+          description: Base64 encoded photo from document
+          example: /9j/4AAQSkZJRgABAgAAAQABAAD/..."
+        address:
+          $ref: '#/components/schemas/DigiKycAddress'
+      required:
+        - referenceId
+        - uid
+        - fullName
+        - dob
+        - gender
+        - address
+    DigiKycAddress:
+      type: object
+      properties:
+        careof:
+          type: string
+          description: Care of
+          example: 'S/O:Test Father'
+        house:
+          type: string
+          description: House/Building number
+          example: ''
+        street:
+          type: string
+          description: Street name
+          example: ''
+        landmark:
+          type: string
+          description: Landmark
+          example: ''
+        locality:
+          type: string
+          description: Locality/Area
+          example: ''
+        vtc:
+          type: string
+          description: Village/Town/City
+          example: Sawad
+        subdist:
+          type: string
+          description: Sub District
+          example: Tharali
+        dist:
+          type: string
+          description: District
+          example: Kaharar
+        state:
+          type: string
+          description: State
+          example: Punjab
+        country:
+          type: string
+          description: Country
+          example: India
+        po:
+          type: string
+          description: Post Office
+          example: Kharar
+        pc:
+          type: string
+          description: PIN Code
+          example: '246427'
+    AadhaarOTPRequestJSON:
+      type: object
+      required:
+        - aadhaarUid
+        - uidType
+        - reqType
+      properties:
+        aadhaarUid:
+          type: string
+          description: 12-digit Aadhaar number
+          pattern: ^[0-9]{12}$
+          example: '123456789012'
+        uidType:
+          type: string
+          description: UID Type - A for Aadhaar, U for UID
+          enum:
+            - A
+            - U
+          example: A
+        reqType:
+          type: string
+          description: Request Type - S for Send OTP, V for Verify OTP
+          enum:
+            - S
+            - V
+          example: S
+        appName:
+          type: string
+          description: Application name (defaults to CRA)
+          example: CRA
+    AadhaarOTPResponseJSON:
+      type: object
+      properties:
+        otpTransNum:
+          type: integer
+          format: int64
+          description: OTP transaction number
+          example: 38114757
+        aadharNum:
+          type: string
+          description: Masked Aadhaar number
+          example: XXXX-XXXX-9012
+        uidType:
+          type: string
+          description: UID type
+          example: A
+        eSignOTPTransNum:
+          type: string
+          description: eSign OTP transaction number
+          example: '38114757'
+        status:
+          type: string
+          description: Response status
+          example: SUCCESS
+        finalResp:
+          type: string
+          description: Final response message
+          example: OTP sent successfully
+        uidResTs:
+          type: string
+          description: UID response timestamp
+        uidResMaskedMobile:
+          type: string
+          description: Masked mobile number
+        uidResMaskedEmailID:
+          type: string
+          description: Masked email ID
+        vaultTrxnID:
+          type: string
+          description: Vault transaction ID
+          example: TIN01:CRA01:2025092551444AE7248071
+        vaultUIDUniqueID:
+          type: string
+          description: Vault UID unique ID
+          example: ee16c17c9746420e8a442cbfdd784de5
+    AadhaarKYCRequestJSON:
+      type: object
+      required:
+        - aadhaarUid
+        - otpNumber
+        - otpTransNum
+        - uidType
+        - reqType
+      properties:
+        aadhaarUid:
+          type: string
+          description: 12-digit Aadhaar number
+          pattern: ^[0-9]{12}$
+          example: '123456789012'
+        otpNumber:
+          type: string
+          description: 6-digit OTP received on mobile
+          pattern: ^[0-9]{6}$
+          example: '362375'
+        otpTransNum:
+          type: string
+          description: OTP transaction number from generateOTP response
+          example: '38114625'
+        uidType:
+          type: string
+          description: UID type (A for Aadhaar, U for UID)
+          enum:
+            - A
+            - U
+          example: A
+        reqType:
+          type: string
+          description: Request type (S for Send OTP, V for Verify OTP)
+          enum:
+            - S
+            - V
+          example: S
+        appName:
+          type: string
+          description: Application name
+          example: CRA
+    AadhaarKYCResponseJSON:
+      type: object
+      description: Dynamic KYC response containing all fields returned by the Aadhaar API
+      additionalProperties: true
+      example:
+        status: SUCCESS
+        finalResp: Aadhar Details Fetched Successfully
+        aadhaarNumber: XXXX-XXXX-1234
+        name: John Doe
+        dob: 01-01-1990
+        gender: M
+        address:
+          house: '123'
+          street: Main Street
+          landmark: Near Park
+          locality: Downtown
+          vtc: City
+          district: District Name
+          state: State Name
+          pincode: '123456'
+          country: India
+        photo: base64_encoded_photo_string...
+        maskedMobile: XXXXXX3210
+        maskedEmail: j***@example.com
+        careOf: S/O Father Name
+        vaultTrxnID: TIN01:CRA01:2025092551444AE7248071
+        vaultUIDUniqueID: ee16c17c9746420e8a442cbfdd784de5
+        uidaiResponseCode: '100'
+        uidaiResponseMessage: Success
+        uidaiTxnId: '1234567890'
+        kycTimestamp: '2025-09-12T15:30:00Z'
+    CashfreeOrderRequest:
+      type: object
+      required:
+        - order_id
+        - order_amount
+        - order_currency
+        - customer_details
+      properties:
+        order_id:
+          type: string
+          description: Unique order ID
+          example: order_1234567890
+        order_amount:
+          type: number
+          format: double
+          description: Order amount
+          example: 1000.5
+        order_currency:
+          type: string
+          description: Currency code
+          example: INR
+        order_note:
+          type: string
+          description: Order notes
+          example: Payment for order #1234
+        customer_details:
+          $ref: '#/components/schemas/CashfreeCustomerDetails'
+        order_meta:
+          type: object
+          properties:
+            return_url:
+              type: string
+              description: URL to redirect after payment
+            notify_url:
+              type: string
+              description: Webhook URL for payment notifications
+    CashfreeOrderResponse:
+      type: object
+      properties:
+        cf_order_id:
+          type: string
+          description: Cashfree order ID
+        order_id:
+          type: string
+          description: Merchant order ID
+        order_status:
+          type: string
+          description: Order status
+          enum:
+            - ACTIVE
+            - PAID
+            - EXPIRED
+        order_token:
+          type: string
+          description: Order token for payment
+        order_amount:
+          type: number
+          format: double
+        payment_session_id:
+          type: string
+          description: Payment session ID for SDK integration
+        created_at:
+          type: string
+          format: date-time
+    CashfreeOrderDetails:
+      type: object
+      properties:
+        cf_order_id:
+          type: string
+        order_id:
+          type: string
+        order_status:
+          type: string
+        order_amount:
+          type: number
+          format: double
+        order_currency:
+          type: string
+        customer_details:
+          $ref: '#/components/schemas/CashfreeCustomerDetails'
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/CashfreePaymentDetails'
+    CashfreePaymentRequest:
+      type: object
+      required:
+        - payment_method
+      properties:
+        payment_method:
+          $ref: '#/components/schemas/CashfreePaymentMethod'
+        payment_session_id:
+          type: string
+          description: Payment session ID from order creation
+    CashfreePaymentResponse:
+      type: object
+      properties:
+        cf_payment_id:
+          type: string
+        order_id:
+          type: string
+        payment_status:
+          type: string
+          enum:
+            - SUCCESS
+            - FAILED
+            - PENDING
+        payment_amount:
+          type: number
+          format: double
+        payment_time:
+          type: string
+          format: date-time
+        payment_method:
+          $ref: '#/components/schemas/CashfreePaymentMethod'
+    CashfreePaymentLinkRequest:
+      type: object
+      required:
+        - link_id
+        - link_amount
+        - link_currency
+        - customer_details
+      properties:
+        link_id:
+          type: string
+          description: Unique link ID
+          example: link_1234567890
+        link_amount:
+          type: number
+          format: double
+          description: Payment amount
+          example: 1000
+        link_currency:
+          type: string
+          description: Currency code
+          example: INR
+        link_purpose:
+          type: string
+          description: Purpose of payment link
+          example: Payment for services
+        customer_details:
+          $ref: '#/components/schemas/CashfreeCustomerDetails'
+        link_expiry_time:
+          type: string
+          format: date-time
+          description: Link expiry time
+        link_notify:
+          type: object
+          properties:
+            send_sms:
+              type: boolean
+            send_email:
+              type: boolean
+    CashfreePaymentLinkResponse:
+      type: object
+      properties:
+        cf_link_id:
+          type: string
+        link_id:
+          type: string
+        link_status:
+          type: string
+          enum:
+            - ACTIVE
+            - PAID
+            - EXPIRED
+            - CANCELLED
+        link_url:
+          type: string
+          description: Payment link URL
+        link_amount:
+          type: number
+          format: double
+        created_at:
+          type: string
+          format: date-time
+    CashfreeSubscriptionPlanRequest:
+      type: object
+      required:
+        - plan_id
+        - plan_name
+        - plan_type
+        - plan_amount
+      properties:
+        plan_id:
+          type: string
+          description: Unique plan ID
+          example: PLAN_001
+        plan_name:
+          type: string
+          description: Plan name
+          example: Monthly Premium Plan
+        plan_type:
+          type: string
+          enum:
+            - ON_DEMAND
+            - PERIODIC
+          description: Plan type
+        plan_currency:
+          type: string
+          description: Currency code
+          example: INR
+        plan_amount:
+          type: number
+          format: double
+          description: Plan amount
+          example: 999
+        plan_max_amount:
+          type: number
+          format: double
+          description: Maximum amount per cycle
+        plan_max_cycles:
+          type: integer
+          description: Maximum billing cycles
+        plan_intervals:
+          type: integer
+          description: Billing interval
+        plan_interval_type:
+          type: string
+          enum:
+            - DAY
+            - WEEK
+            - MONTH
+            - YEAR
+          description: Interval type for PERIODIC plans
+        plan_note:
+          type: string
+          description: Plan description
+    CashfreeSubscriptionPlanResponse:
+      type: object
+      properties:
+        plan_id:
+          type: string
+        plan_name:
+          type: string
+        plan_status:
+          type: string
+          enum:
+            - ACTIVE
+            - INACTIVE
+        created_at:
+          type: string
+          format: date-time
+    CashfreeSubscriptionRequest:
+      type: object
+      required:
+        - subscription_id
+        - customer_details
+      properties:
+        subscription_id:
+          type: string
+          description: Unique subscription ID
+          example: SUB_001
+        plan_id:
+          type: string
+          description: Plan ID (required if plan_details not provided)
+        plan_details:
+          $ref: '#/components/schemas/CashfreePlanDetails'
+        customer_details:
+          $ref: '#/components/schemas/CashfreeCustomerDetails'
+        subscription_expiry_time:
+          type: string
+          format: date-time
+          description: Subscription expiry time
+        subscription_first_charge_time:
+          type: string
+          format: date-time
+          description: First charge time
+        authorization_details:
+          $ref: '#/components/schemas/CashfreeAuthorizationDetails'
+        subscription_meta:
+          type: object
+          properties:
+            return_url:
+              type: string
+            notification_channel:
+              type: array
+              items:
+                type: string
+                enum:
+                  - EMAIL
+                  - SMS
+        subscription_note:
+          type: string
+          description: Subscription notes
+    CashfreeSubscriptionResponse:
+      type: object
+      properties:
+        cf_subscription_id:
+          type: string
+        subscription_id:
+          type: string
+        subscription_status:
+          type: string
+          enum:
+            - INITIALIZED
+            - ACTIVE
+            - ON_HOLD
+            - CANCELLED
+            - COMPLETED
+        subscription_session_id:
+          type: string
+          description: Session ID for subscription authorization
+        auth_link:
+          type: string
+          description: Authorization link URL
+        created_at:
+          type: string
+          format: date-time
+    CashfreeSubscriptionDetails:
+      type: object
+      properties:
+        cf_subscription_id:
+          type: string
+        subscription_id:
+          type: string
+        subscription_status:
+          type: string
+        customer_details:
+          $ref: '#/components/schemas/CashfreeCustomerDetails'
+        plan_details:
+          $ref: '#/components/schemas/CashfreePlanDetails'
+        authorization_details:
+          $ref: '#/components/schemas/CashfreeAuthorizationDetails'
+        charges:
+          type: array
+          items:
+            $ref: '#/components/schemas/CashfreeChargeDetails'
+    CashfreeCancelSubscriptionRequest:
+      type: object
+      properties:
+        cancel_reason:
+          type: string
+          description: Reason for cancellation
+    CashfreeCancelSubscriptionResponse:
+      type: object
+      properties:
+        cf_subscription_id:
+          type: string
+        subscription_id:
+          type: string
+        subscription_status:
+          type: string
+        cancelled_at:
+          type: string
+          format: date-time
+    CashfreeWebhookPayload:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            order:
+              type: object
+            payment:
+              type: object
+            subscription:
+              type: object
+        event_time:
+          type: string
+          format: date-time
+        type:
+          type: string
+          description: Webhook event type
+          example: PAYMENT_SUCCESS_WEBHOOK
+    CashfreeV2SubscriptionRequest:
+      type: object
+      required:
+        - subscription_id
+        - customer_details
+      properties:
+        subscription_id:
+          type: string
+          description: Unique subscription ID
+          example: SUB_V2_001
+        plan_id:
+          type: string
+          description: Existing plan ID (required if plan_details not provided)
+        plan_details:
+          $ref: '#/components/schemas/CashfreePlanDetails'
+        customer_details:
+          $ref: '#/components/schemas/CashfreeCustomerDetails'
+        subscription_expiry_time:
+          type: string
+          format: date-time
+          description: Subscription expiry time
+        authorization_details:
+          $ref: '#/components/schemas/CashfreeAuthorizationDetails'
+        subscription_meta:
+          type: object
+          properties:
+            return_url:
+              type: string
+        subscription_note:
+          type: string
+    CashfreeV2SubscriptionResponse:
+      type: object
+      properties:
+        subscription_id:
+          type: string
+        cf_subscription_id:
+          type: string
+        subscription_status:
+          type: string
+        subscription_session_id:
+          type: string
+          description: Session ID for V2 subscription checkout
+        created_at:
+          type: string
+          format: date-time
+        message:
+          type: string
+    CashfreeV2PlanRequest:
+      type: object
+      required:
+        - plan_name
+        - plan_type
+        - plan_amount
+      properties:
+        plan_id:
+          type: string
+          description: Unique plan ID
+        plan_name:
+          type: string
+          description: Plan name
+        plan_type:
+          type: string
+          enum:
+            - ON_DEMAND
+            - PERIODIC
+        plan_currency:
+          type: string
+          default: INR
+        plan_amount:
+          type: number
+          format: double
+        plan_max_amount:
+          type: number
+          format: double
+        plan_max_cycles:
+          type: integer
+        plan_intervals:
+          type: integer
+        plan_interval_type:
+          type: string
+          enum:
+            - DAY
+            - WEEK
+            - MONTH
+            - YEAR
+        plan_note:
+          type: string
+    CashfreeV2PlanResponse:
+      type: object
+      properties:
+        plan_id:
+          type: string
+        plan_name:
+          type: string
+        plan_status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        message:
+          type: string
+    CashfreeCustomerDetails:
+      type: object
+      required:
+        - customer_id
+        - customer_phone
+      properties:
+        customer_id:
+          type: string
+          description: Customer ID
+          example: CUST_001
+        customer_name:
+          type: string
+          description: Customer name
+          example: John Doe
+        customer_email:
+          type: string
+          format: email
+          description: Customer email
+          example: john@example.com
+        customer_phone:
+          type: string
+          description: Customer phone
+          example: '9999999999'
+        customer_bank_account_holder_name:
+          type: string
+        customer_bank_account_number:
+          type: string
+        customer_bank_ifsc:
+          type: string
+    CashfreePlanDetails:
+      type: object
+      required:
+        - plan_name
+        - plan_type
+        - plan_amount
+      properties:
+        plan_name:
+          type: string
+        plan_type:
+          type: string
+          enum:
+            - ON_DEMAND
+            - PERIODIC
+        plan_currency:
+          type: string
+          default: INR
+        plan_amount:
+          type: number
+          format: double
+        plan_max_amount:
+          type: number
+          format: double
+        plan_max_cycles:
+          type: integer
+        plan_intervals:
+          type: integer
+        plan_interval_type:
+          type: string
+          enum:
+            - DAY
+            - WEEK
+            - MONTH
+            - YEAR
+        plan_note:
+          type: string
+    CashfreeAuthorizationDetails:
+      type: object
+      properties:
+        authorization_amount:
+          type: number
+          format: double
+          description: Authorization amount
+          example: 1
+        authorization_amount_refund:
+          type: boolean
+          description: Refund authorization amount
+          example: true
+        payment_method:
+          type: string
+          description: Payment method for authorization
+        payment_methods:
+          type: array
+          items:
+            type: string
+            enum:
+              - enach
+              - upi
+              - card
+          description: Allowed payment methods
+    CashfreePaymentMethod:
+      type: object
+      properties:
+        method:
+          type: string
+          enum:
+            - card
+            - upi
+            - netbanking
+            - enach
+            - wallet
+        card:
+          type: object
+          properties:
+            card_number:
+              type: string
+            card_holder_name:
+              type: string
+            card_expiry_mm:
+              type: string
+            card_expiry_yy:
+              type: string
+            card_cvv:
+              type: string
+        upi:
+          type: object
+          properties:
+            channel:
+              type: string
+              enum:
+                - collect
+                - qrcode
+            upi_id:
+              type: string
+        netbanking:
+          type: object
+          properties:
+            bank_code:
+              type: string
+    CashfreePaymentDetails:
+      type: object
+      properties:
+        cf_payment_id:
+          type: string
+        payment_status:
+          type: string
+        payment_amount:
+          type: number
+          format: double
+        payment_time:
+          type: string
+          format: date-time
+        payment_method:
+          $ref: '#/components/schemas/CashfreePaymentMethod'
+    CashfreeChargeDetails:
+      type: object
+      properties:
+        charge_id:
+          type: string
+        charge_status:
+          type: string
+        charge_amount:
+          type: number
+          format: double
+        charge_time:
+          type: string
+          format: date-time
+    DuplicateCheckRequest:
+      type: object
+      required:
+        - userId
+        - pan
+      properties:
+        userId:
+          type: string
+          description: User ID for the duplicate check
+          example: 1300987BO
+        pan:
+          type: string
+          description: PAN number to check for duplicates
+          example: KXPPS3076A
+        pran:
+          type: string
+          description: PRAN number (optional)
+          example: ''
+        bankIFScode:
+          type: string
+          description: Bank IFSC code (optional)
+          example: SBIN0001234
+        bankAccNo:
+          type: string
+          description: Bank account number (optional)
+          example: '12345678901'
+        emailId:
+          type: string
+          description: Email ID (optional)
+          example: test@example.com
+        mobNumber:
+          type: string
+          description: Mobile number (optional)
+          example: '9876543210'
+        inPopRegNo:
+          type: string
+          description: POP registration number (optional)
+          example: '5000111'
+        checkAllCRA:
+          type: boolean
+          description: Whether to check all CRA systems
+          example: true
+    DuplicateCheckResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Response status
+          example: SUCCESS
+        message:
+          type: string
+          description: Response message
+          example: Duplicate check completed
+        pan:
+          type: string
+          description: PAN number that was checked
+          example: KXPPS3076A
+        pranConfirmation:
+          type: string
+          description: PRAN confirmation status (Y/N)
+          example: N
+        pranStatus:
+          type: string
+          description: PRAN status
+          example: VALID
+        description:
+          type: string
+          description: Description of the check result
+          example: No duplicate found
+        bankAccNo:
+          type: string
+          description: Bank account number
+          example: '12345678901'
+        bankIFSCode:
+          type: string
+          description: Bank IFSC code
+          example: SBIN0001234
+        emailId:
+          type: string
+          description: Email ID
+          example: test@example.com
+        mobNumber:
+          type: string
+          description: Mobile number
+          example: '9876543210'
+        bankdtlsConfirmation:
+          type: string
+          description: Bank details confirmation status
+          example: N
+        mobNumberConfirmation:
+          type: string
+          description: Mobile number confirmation status
+          example: N
+        emailIdConfirmation:
+          type: string
+          description: Email ID confirmation status
+          example: N
+        fieldErrors:
+          type: object
+          description: Field validation errors
+          example: null
+        isDuplicate:
+          type: boolean
+          description: Whether duplicate was found
+          example: false
+        duplicateDetails:
+          type: array
+          description: Details of duplicates found
+          items:
+            $ref: '#/components/schemas/PanDedupeDetail'
+    PanDedupeDetail:
+      type: object
+      properties:
+        pan:
+          type: string
+          description: PAN number
+          example: KXPPS3076A
+        pran:
+          type: string
+          description: PRAN number
+          example: '123456789012'
+        status:
+          type: string
+          description: Status of the record
+          example: ACTIVE
+        craName:
+          type: string
+          description: CRA name where duplicate was found
+          example: CAMS
+        isDuplicate:
+          type: boolean
+          description: Whether this is a duplicate
+          example: true
+    TINPanInquiryRequest:
+      type: object
+      required:
+        - inputData
+      properties:
+        inputData:
+          type: array
+          description: Array of PAN inquiry input data
+          items:
+            $ref: '#/components/schemas/TINPanInquiryInputData'
+    TINPanInquiryInputData:
+      type: object
+      required:
+        - pan
+      properties:
+        pan:
+          type: string
+          description: PAN number to inquire
+          example: AAAPA0039K
+        name:
+          type: string
+          description: Name of the PAN holder
+          example: Gajendra Mehra
+        fathername:
+          type: string
+          description: Father's name of the PAN holder
+          example: ''
+        dob:
+          type: string
+          description: Date of birth (DD/MM/YYYY format)
+          example: 18/10/1989
+    TINPanInquiryResponse:
+      type: object
+      properties:
+        response_Code:
+          type: string
+          description: Response code (1 for success)
+          example: '1'
+        outputData:
+          type: array
+          description: Array of PAN inquiry output data
+          items:
+            $ref: '#/components/schemas/TINPanInquiryOutputData'
+    TINPanInquiryOutputData:
+      type: object
+      properties:
+        pan:
+          type: string
+          description: PAN number (may be different from input for special cases)
+          example: AAAPA0039K
+        pan_status:
+          type: string
+          description: PAN status (E=Exists, N=Not found)
+          example: E
+        name:
+          type: string
+          description: Name match status (Y/N or empty)
+          example: Y
+        fathername:
+          type: string
+          description: Father's name match status
+          example: ''
+        dob:
+          type: string
+          description: Date of birth match status (Y/N or empty)
+          example: Y
+        seeding_status:
+          type: string
+          description: Aadhaar seeding status (Y/N or empty)
+          example: Y
+    SignzyDirectBankTransferRequest:
+      type: object
+      required:
+        - beneficiaryAccount
+        - beneficiaryIFSC
+        - beneficiaryName
+      properties:
+        beneficiaryAccount:
+          type: string
+          description: Bank account number to verify
+          example: '00000055158889738'
+        beneficiaryIFSC:
+          type: string
+          description: IFSC code of the bank
+          example: SBIN0050007
+        beneficiaryName:
+          type: string
+          description: Account holder name
+          example: Sahil Sharma
+        beneficiaryMobile:
+          type: string
+          description: Mobile number associated with account
+          example: '6284202730'
+        nameMatchScore:
+          type: string
+          description: Name match score threshold for fuzzy matching
+          example: '0.7'
+        nameFuzzy:
+          type: boolean
+          description: Enable fuzzy name matching
+          example: true
+        email:
+          type: string
+          description: Email address
+          example: sahil.sharma@thewitslab.com
+    SignzyDirectMobileToAccountRequest:
+      type: object
+      required:
+        - mobileNumber
+      properties:
+        mobileNumber:
+          type: string
+          description: Mobile number to lookup bank account details
+          example: '6284202730'
+    responses:
+      BadRequest:
+        description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ErrorResponse'
+      Unauthorized:
+        description: Unauthorized - Invalid or missing API key
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ErrorResponse'
+      NotFound:
+        description: Resource not found
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ErrorResponse'
+      InternalServerError:
+        description: Internal server error
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ErrorResponse'
+tags:
+  - name: Health
+    description: Health check endpoints
+  - name: PRAN Generation
+    description: APIs for PRAN generation and tracking
+  - name: PAN Services
+    description: PAN validation and enquiry services
+  - name: Bank Services
+    description: Bank account verification services
+  - name: CKYC Services
+    description: Central KYC registry services
+  - name: Subscriber Services
+    description: Subscriber details and management services
+  - name: Contribution Services
+    description: PRAN contribution and account services
+  - name: External API
+    description: External API integrations
+  - name: Cashfree Services
+    description: Cashfree payment gateway integration services including orders, payments, subscriptions, and payment links
